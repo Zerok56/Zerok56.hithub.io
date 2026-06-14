@@ -233,7 +233,7 @@
       <div class="metric-card">
         <div class="metric-label">⭐ Łączne Stars</div>
         <div class="metric-value accent" id="stat-stars">847</div>
-        <div class="metric-sub green">↑ +23 w tym tygodniu</div>
+        <div class="metric-sub green"><span id="stars-change">Ładowanie gwiazdek...</span></div>
       </div>
       <div class="metric-card">
         <div class="metric-label">📁 Repozytoria</div>
@@ -243,12 +243,12 @@
       <div class="metric-card">
         <div class="metric-label">🔁 Commity (30d)</div>
         <div class="metric-value green" id="stat-commits">214</div>
-        <div class="metric-sub green">↑ +18% vs poprzedni miesiąc</div>
+        <div class="metric-sub green"><span id="commits-change">↑ +18% vs poprzedni miesiąc</span></div>
       </div>
       <div class="metric-card">
         <div class="metric-label">👥 Obserwujący</div>
         <div class="metric-value purple" id="stat-followers">156</div>
-        <div class="metric-sub green">↑ +12 w tym miesiącu</div>
+        <div class="metric-sub green"><span id="followers-change">↑ +12 w tym miesiącu</span></div>
       </div>
     </div>
 
@@ -588,6 +588,40 @@ async function loadActivity(headers){
   }catch(e){}
 }
 
+
+async function githubGraphQL(token, query, variables={}){
+  const res = await fetch('https://api.github.com/graphql',{
+    method:'POST',
+    headers:{
+      'Authorization':'Bearer '+token,
+      'Content-Type':'application/json'
+    },
+    body:JSON.stringify({query,variables})
+  });
+  const data = await res.json();
+  if(data.errors) throw new Error(data.errors[0].message);
+  return data.data;
+}
+
+function renderRealHeatmap(weeks){
+  const c=document.getElementById('heatmap');
+  if(!c) return;
+  c.innerHTML='';
+  weeks.forEach(w=>{
+    const col=document.createElement('div');
+    col.className='heatmap-col';
+    w.contributionDays.forEach(day=>{
+      const cell=document.createElement('div');
+      const n=day.contributionCount;
+      const lvl=n===0?0:n<2?1:n<5?2:n<10?3:4;
+      cell.className='hm-cell hm-'+lvl;
+      cell.title=day.date+' : '+n+' contributions';
+      col.appendChild(cell);
+    });
+    c.appendChild(col);
+  });
+}
+
 // ── GitHub API ────────────────────────────────────────────────────────────────
 async function loadGitHub() {
   const token = document.getElementById('gh-token').value.trim();
@@ -614,8 +648,64 @@ async function loadGitHub() {
       topics: r.topics||[]
     }));
     renderRepos(currentRepos);
+    
     await loadLanguages(repos, headers);
     await loadActivity(headers);
+
+try{
+  const starsEl = document.getElementById('stars-change');
+  const reposList = Array.isArray(repos) ? repos : [];
+  const totalStars = reposList.reduce((s,r)=>s + (r.stargazers_count || 0), 0);
+  if(starsEl){
+    starsEl.textContent = totalStars + ' łącznych gwiazdek';
+  }
+}catch(e){ console.error(e); }
+
+
+    try{
+      const gql = await githubGraphQL(token, `
+      query {
+        viewer {
+          followers { totalCount }
+          contributionsCollection {
+            contributionCalendar {
+              totalContributions
+              weeks {
+                contributionDays {
+                  contributionCount
+                  date
+                }
+              }
+            }
+          }
+        }
+      }`);
+
+      const coll = gql.viewer.contributionsCollection;
+      const cal = coll.contributionCalendar;
+      renderRealHeatmap(cal.weeks);
+
+      const stat = document.getElementById('stat-commits');
+      if(stat) stat.textContent = cal.totalContributions;
+
+      const days = cal.weeks.flatMap(w=>w.contributionDays);
+      const now30 = days.slice(-30).reduce((a,d)=>a+d.contributionCount,0);
+      const prev30 = days.slice(-60,-30).reduce((a,d)=>a+d.contributionCount,0);
+
+      if(stat) stat.textContent = now30;
+
+      const pct = prev30>0 ? (((now30-prev30)/prev30)*100).toFixed(1) : 100;
+      const cc = document.getElementById('commits-change');
+      if(cc) cc.textContent = `${pct>=0?'↑':'↓'} ${pct}% vs poprzednie 30 dni`;
+
+      const fc = document.getElementById('followers-change');
+      if(fc){
+         fc.textContent = `${gql.viewer.followers.totalCount} obserwujących`;
+      }
+    }catch(err){
+      console.error('GraphQL',err);
+    }
+
 
     const topR = [...currentRepos].sort((a,b)=>b.stars-a.stars).slice(0,4);
     document.getElementById('top-repos').innerHTML = topR.map(r=>`
