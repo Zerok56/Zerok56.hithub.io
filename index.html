@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DevSpace — Panel Programisty</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --bg2: #161b22;
+    --bg3: #21262d;
+    --border: #30363d;
+    --text: #e6edf3;
+    --muted: #8b949e;
+    --accent: #58a6ff;
+    --green: #3fb950;
+    --amber: #d29922;
+    --red: #f85149;
+    --purple: #bc8cff;
+    --mono: 'Courier New', Courier, monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 14px; min-height: 100vh; }
+
+  /* Layout */
+  .shell { display: flex; height: 100vh; overflow: hidden; }
+  .sidebar { width: 220px; background: var(--bg2); border-right: 1px solid var(--border); display: flex; flex-direction: column; flex-shrink: 0; }
+  .main { flex: 1; overflow-y: auto; display: flex; flex-direction: column; }
+
+  /* Sidebar */
+  .logo { padding: 20px 16px 12px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid var(--border); }
+  .logo-icon { width: 32px; height: 32px; background: var(--accent); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 16px; color: #0d1117; flex-shrink: 0; }
+  .logo-name { font-weight: 600; font-size: 15px; }
+  .logo-sub { font-size: 11px; color: var(--muted); font-family: var(--mono); }
+  nav { padding: 12px 8px; flex: 1; }
+  .nav-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; padding: 8px 8px 4px; }
+  .nav-item { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 6px; cursor: pointer; color: var(--muted); transition: all .15s; border: none; background: none; width: 100%; text-align: left; font-size: 13px; }
+  .nav-item:hover { background: var(--bg3); color: var(--text); }
+  .nav-item.active { background: rgba(88,166,255,.12); color: var(--accent); }
+  .nav-item svg { width: 16px; height: 16px; flex-shrink: 0; }
+  .status { padding: 12px 16px; border-top: 1px solid var(--border); }
+  .status-dot { width: 8px; height: 8px; background: var(--green); border-radius: 50%; display: inline-block; margin-right: 6px; animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1}50%{opacity:.4} }
+
+  /* Topbar */
+  .topbar { padding: 14px 24px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; background: var(--bg); position: sticky; top: 0; z-index: 10; }
+  .topbar-title { font-size: 16px; font-weight: 600; }
+  .topbar-meta { font-size: 12px; color: var(--muted); font-family: var(--mono); }
+  .token-form { display: flex; gap: 8px; align-items: center; }
+  .token-input { background: var(--bg2); border: 1px solid var(--border); border-radius: 6px; padding: 6px 10px; color: var(--text); font-size: 12px; font-family: var(--mono); width: 260px; }
+  .token-input:focus { outline: none; border-color: var(--accent); }
+  .btn { padding: 6px 14px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg3); color: var(--text); cursor: pointer; font-size: 12px; transition: all .15s; }
+  .btn:hover { border-color: var(--accent); color: var(--accent); }
+  .btn-primary { background: var(--accent); color: #0d1117; border-color: var(--accent); font-weight: 600; }
+  .btn-primary:hover { background: #79beff; color: #0d1117; }
+
+  /* Panels */
+  .panel { display: none; padding: 24px; }
+  .panel.active { display: block; }
+
+  /* Metrics grid */
+  .metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+  .metric-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; padding: 16px; }
+  .metric-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 8px; }
+  .metric-value { font-size: 26px; font-weight: 600; font-family: var(--mono); }
+  .metric-sub { font-size: 11px; color: var(--muted); margin-top: 4px; }
+  .green { color: var(--green); } .red { color: var(--red); } .amber { color: var(--amber); } .accent { color: var(--accent); } .purple { color: var(--purple); }
+
+  /* Cards */
+  .card { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; padding: 16px; margin-bottom: 16px; }
+  .card-title { font-size: 13px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 14px; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+  /* Contribution heatmap */
+  .heatmap { display: flex; gap: 3px; }
+  .heatmap-col { display: flex; flex-direction: column; gap: 3px; }
+  .hm-cell { width: 12px; height: 12px; border-radius: 2px; background: var(--bg3); }
+  .hm-0 { background: var(--bg3); }
+  .hm-1 { background: #0e4429; }
+  .hm-2 { background: #006d32; }
+  .hm-3 { background: #26a641; }
+  .hm-4 { background: #39d353; }
+  .hm-labels { display: flex; justify-content: space-between; font-size: 10px; color: var(--muted); margin-top: 6px; font-family: var(--mono); }
+
+  /* Language bars */
+  .lang-bar-track { height: 6px; background: var(--bg3); border-radius: 3px; margin: 6px 0; overflow: hidden; }
+  .lang-bar-fill { height: 100%; border-radius: 3px; }
+  .lang-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+  .lang-name { font-size: 13px; }
+  .lang-pct { font-size: 12px; color: var(--muted); font-family: var(--mono); }
+
+  /* Repo list */
+  .repo-item { padding: 14px 0; border-bottom: 1px solid var(--border); }
+  .repo-item:last-child { border-bottom: none; }
+  .repo-name { font-weight: 600; color: var(--accent); font-size: 14px; cursor: pointer; }
+  .repo-name:hover { text-decoration: underline; }
+  .repo-desc { color: var(--muted); font-size: 12px; margin: 4px 0 8px; }
+  .repo-meta { display: flex; gap: 16px; font-size: 12px; color: var(--muted); }
+  .repo-tag { background: rgba(88,166,255,.1); color: var(--accent); border: 1px solid rgba(88,166,255,.25); padding: 2px 8px; border-radius: 12px; font-size: 11px; }
+
+  /* Activity feed */
+  .feed-item { display: flex; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); align-items: flex-start; }
+  .feed-item:last-child { border-bottom: none; }
+  .feed-icon { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 13px; }
+  .feed-text { flex: 1; }
+  .feed-main { font-size: 13px; line-height: 1.5; }
+  .feed-time { font-size: 11px; color: var(--muted); font-family: var(--mono); margin-top: 2px; }
+
+  /* AI Chat */
+  .ai-layout { display: flex; flex-direction: column; height: calc(100vh - 120px); }
+  .ai-messages { flex: 1; overflow-y: auto; padding-bottom: 16px; }
+  .ai-msg { display: flex; gap: 10px; margin-bottom: 16px; }
+  .ai-avatar { width: 30px; height: 30px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; flex-shrink: 0; margin-top: 2px; }
+  .ai-avatar.bot { background: rgba(88,166,255,.15); color: var(--accent); border: 1px solid rgba(88,166,255,.2); }
+  .ai-avatar.user { background: rgba(63,185,80,.12); color: var(--green); border: 1px solid rgba(63,185,80,.2); }
+  .ai-bubble { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; font-size: 13px; line-height: 1.7; max-width: 780px; }
+  .ai-bubble.user { background: rgba(88,166,255,.06); }
+  .ai-bubble pre { background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 10px; margin: 8px 0; overflow-x: auto; font-size: 12px; font-family: var(--mono); }
+  .ai-bubble code { font-family: var(--mono); font-size: 12px; background: var(--bg); padding: 1px 5px; border-radius: 3px; color: var(--purple); }
+  .ai-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+  .chip { padding: 5px 12px; border: 1px solid var(--border); border-radius: 16px; background: var(--bg2); color: var(--muted); font-size: 12px; cursor: pointer; transition: all .15s; }
+  .chip:hover { border-color: var(--accent); color: var(--accent); }
+  .ai-input-row { display: flex; gap: 10px; padding-top: 12px; border-top: 1px solid var(--border); }
+  .ai-input { flex: 1; background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; color: var(--text); font-size: 13px; resize: none; }
+  .ai-input:focus { outline: none; border-color: var(--accent); }
+  .typing-indicator { display: none; }
+  .typing-dots span { display: inline-block; width: 6px; height: 6px; background: var(--muted); border-radius: 50%; margin: 0 2px; animation: bounce 1.2s infinite; }
+  .typing-dots span:nth-child(2){animation-delay:.2s}.typing-dots span:nth-child(3){animation-delay:.4s}
+  @keyframes bounce{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-5px)}}
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  /* Badge */
+  .badge { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; padding: 2px 8px; border-radius: 12px; }
+  .badge-green { background: rgba(63,185,80,.1); color: var(--green); border: 1px solid rgba(63,185,80,.2); }
+  .badge-amber { background: rgba(210,153,34,.1); color: var(--amber); border: 1px solid rgba(210,153,34,.2); }
+  .badge-red { background: rgba(248,81,73,.1); color: var(--red); border: 1px solid rgba(248,81,73,.2); }
+  .badge-accent { background: rgba(88,166,255,.1); color: var(--accent); border: 1px solid rgba(88,166,255,.2); }
+
+  /* Commit chart */
+  .commit-chart { height: 60px; display: flex; align-items: flex-end; gap: 2px; }
+  .commit-bar { flex: 1; border-radius: 2px 2px 0 0; background: rgba(88,166,255,.3); transition: background .15s; min-height: 3px; }
+  .commit-bar:hover { background: var(--accent); }
+
+  /* Token hint */
+  .hint { font-size: 12px; color: var(--muted); background: rgba(210,153,34,.08); border: 1px solid rgba(210,153,34,.2); border-radius: 6px; padding: 10px 14px; margin-bottom: 16px; }
+  .hint a { color: var(--amber); }
+
+  /* Spinner */
+  .spinner { width: 16px; height: 16px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .7s linear infinite; display: inline-block; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  @media (max-width: 700px) {
+    .sidebar { display: none; }
+    .metrics { grid-template-columns: 1fr 1fr; }
+    .grid2 { grid-template-columns: 1fr; }
+    .token-form { flex-direction: column; align-items: flex-start; }
+    .token-input { width: 100%; }
+  }
+</style>
+</head>
+<body>
+<div class="shell">
+
+<!-- Sidebar -->
+<aside class="sidebar">
+  <div class="logo">
+    <div class="logo-icon">&lt;/&gt;</div>
+    <div>
+      <div class="logo-name">DevSpace</div>
+      <div class="logo-sub">panel programisty</div>
+    </div>
+  </div>
+  <nav>
+    <div class="nav-label">Widoki</div>
+    <button class="nav-item active" onclick="showPanel('dashboard')">
+      <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M3 3h7v9H3zm11 0h7v5h-7zm0 9h7v9h-7zM3 16h7v5H3z"/></svg>
+      Dashboard
+    </button>
+    <button class="nav-item" onclick="showPanel('repos')">
+      <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M3 3h18v18H3zm4 4v10m5-10v10m5-10v10M7 7h10"/></svg>
+      Repozytoria
+    </button>
+    <button class="nav-item" onclick="showPanel('langs')">
+      <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M8 9l-4 3 4 3m8-6l4 3-4 3m-2-8l-2 10"/></svg>
+      Języki & Stack
+    </button>
+    <button class="nav-item" onclick="showPanel('ai')">
+      <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9 9l1.5 1.5L12 9l1.5 1.5L15 9m-6 6l1.5-1.5L12 15l1.5-1.5L15 15"/></svg>
+      AI Asystent
+    </button>
+    <div class="nav-label" style="margin-top:8px">Zasoby</div>
+    <button class="nav-item" onclick="openLink('https://github.com')">
+      <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 00-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0020 4.77 5.07 5.07 0 0019.91 1S18.73.65 16 2.48a13.38 13.38 0 00-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 005 4.77a5.44 5.44 0 00-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 009 18.13V22"/></svg>
+      GitHub
+    </button>
+    <button class="nav-item" onclick="openLink('https://developer.mozilla.org')">
+      <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
+      MDN Docs
+    </button>
+  </nav>
+  <div class="status">
+    <span class="status-dot"></span>
+    <span style="font-size:12px;color:var(--muted)">System online</span>
+  </div>
+</aside>
+
+<!-- Main -->
+<div class="main">
+
+  <!-- Topbar -->
+  <div class="topbar">
+    <div>
+      <div class="topbar-title" id="panel-title">Dashboard</div>
+      <div class="topbar-meta" id="panel-meta">ostatnia aktualizacja: właśnie teraz</div>
+    </div>
+    <div class="token-form">
+      <input class="token-input" id="gh-token" type="password" placeholder="GitHub Personal Access Token (opcjonalne)">
+      <button class="btn" onclick="loadGitHub()">Załaduj dane GitHub</button>
+    </div>
+  </div>
+
+  <!-- DASHBOARD PANEL -->
+  <div id="panel-dashboard" class="panel active">
+    <div class="hint">
+      💡 <strong>Wskazówka:</strong> Wpisz token GitHub powyżej, aby załadować <strong>prawdziwe dane</strong> ze swoich repozytoriów. Token tworzysz w <a href="https://github.com/settings/tokens" target="_blank">github.com/settings/tokens</a> — wybierz <code style="font-family:var(--mono);font-size:11px">public_repo</code>. Poniżej prezentowane są dane przykładowe.
+    </div>
+
+    <div class="metrics" id="metrics-grid">
+      <div class="metric-card">
+        <div class="metric-label">⭐ Łączne Stars</div>
+        <div class="metric-value accent" id="stat-stars">847</div>
+        <div class="metric-sub green">↑ +23 w tym tygodniu</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">📁 Repozytoria</div>
+        <div class="metric-value" id="stat-repos">32</div>
+        <div class="metric-sub">w tym 8 prywatnych</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">🔁 Commity (30d)</div>
+        <div class="metric-value green" id="stat-commits">214</div>
+        <div class="metric-sub green">↑ +18% vs poprzedni miesiąc</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">👥 Obserwujący</div>
+        <div class="metric-value purple" id="stat-followers">156</div>
+        <div class="metric-sub green">↑ +12 w tym miesiącu</div>
+      </div>
+    </div>
+
+    <div class="grid2">
+      <div class="card">
+        <div class="card-title">Aktywność commitów — ostatnie 30 dni</div>
+        <div class="commit-chart" id="commit-chart"></div>
+        <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-top:6px;font-family:var(--mono)">
+          <span id="date-from">1 maj</span><span id="date-to">dziś</span>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Siatka kontrybucji (ostatnie 16 tygodni)</div>
+        <div class="heatmap" id="heatmap"></div>
+        <div class="hm-labels"><span>16 tyg. temu</span><span>dziś</span></div>
+        <div style="display:flex;align-items:center;gap:6px;margin-top:8px;font-size:11px;color:var(--muted)">
+          Mniej
+          <span style="display:inline-flex;gap:2px">
+            <span style="width:10px;height:10px;border-radius:2px;background:var(--bg3);display:inline-block"></span>
+            <span style="width:10px;height:10px;border-radius:2px;background:#0e4429;display:inline-block"></span>
+            <span style="width:10px;height:10px;border-radius:2px;background:#006d32;display:inline-block"></span>
+            <span style="width:10px;height:10px;border-radius:2px;background:#26a641;display:inline-block"></span>
+            <span style="width:10px;height:10px;border-radius:2px;background:#39d353;display:inline-block"></span>
+          </span>
+          Więcej
+        </div>
+      </div>
+    </div>
+
+    <div class="grid2">
+      <div class="card">
+        <div class="card-title">Ostatnia aktywność</div>
+        <div id="activity-feed">
+          <div class="feed-item"><div class="feed-icon" style="background:rgba(63,185,80,.1)">🔀</div><div class="feed-text"><div class="feed-main">Scalono PR #241 — <strong>refactor: auth middleware</strong></div><div class="feed-time">2 min temu · main</div></div></div>
+          <div class="feed-item"><div class="feed-icon" style="background:rgba(88,166,255,.1)">✅</div><div class="feed-text"><div class="feed-main">Build passed — <code style="font-family:var(--mono);font-size:11px">v2.4.1-rc</code></div><div class="feed-time">8 min temu · CI/CD</div></div></div>
+          <div class="feed-item"><div class="feed-icon" style="background:rgba(210,153,34,.1)">🐛</div><div class="feed-text"><div class="feed-main">Issue #89 — Memory leak w <code style="font-family:var(--mono);font-size:11px">useEffect</code></div><div class="feed-time">23 min temu · api-dashboard</div></div></div>
+          <div class="feed-item"><div class="feed-icon" style="background:rgba(188,140,255,.1)">🌿</div><div class="feed-text"><div class="feed-main">Nowa gałąź: <code style="font-family:var(--mono);font-size:11px">feature/dark-mode</code></div><div class="feed-time">1 godz. temu · portfolio</div></div></div>
+          <div class="feed-item"><div class="feed-icon" style="background:rgba(248,81,73,.1)">🔖</div><div class="feed-text"><div class="feed-main">Release <strong>v2.3.0</strong> opublikowany</div><div class="feed-time">3 godz. temu · api-dashboard</div></div></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Top repozytoria (Stars)</div>
+        <div id="top-repos">
+          <div style="margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--border)">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <span style="color:var(--accent);font-weight:600">api-dashboard</span>
+              <span style="color:var(--amber);font-size:12px">⭐ 312</span>
+            </div>
+            <div style="font-size:12px;color:var(--muted);margin-top:4px">REST API monitoring tool — TypeScript, React</div>
+          </div>
+          <div style="margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--border)">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <span style="color:var(--accent);font-weight:600">devspace-cli</span>
+              <span style="color:var(--amber);font-size:12px">⭐ 248</span>
+            </div>
+            <div style="font-size:12px;color:var(--muted);margin-top:4px">Narzędzie CLI dla deweloperów — Go, Bash</div>
+          </div>
+          <div style="margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--border)">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <span style="color:var(--accent);font-weight:600">ml-experiments</span>
+              <span style="color:var(--amber);font-size:12px">⭐ 187</span>
+            </div>
+            <div style="font-size:12px;color:var(--muted);margin-top:4px">Eksperymenty z ML — Python, Jupyter</div>
+          </div>
+          <div>
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <span style="color:var(--accent);font-weight:600">portfolio</span>
+              <span style="color:var(--amber);font-size:12px">⭐ 100</span>
+            </div>
+            <div style="font-size:12px;color:var(--muted);margin-top:4px">Strona osobista — Next.js, TailwindCSS</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- REPOS PANEL -->
+  <div id="panel-repos" class="panel">
+    <div style="display:flex;gap:8px;margin-bottom:16px">
+      <input class="token-input" id="repo-search" placeholder="Szukaj repozytoriów..." oninput="filterRepos()" style="width:240px">
+      <select id="repo-lang" onchange="filterRepos()" style="background:var(--bg2);border:1px solid var(--border);color:var(--text);padding:6px 10px;border-radius:6px;font-size:12px">
+        <option value="">Wszystkie języki</option>
+        <option value="TypeScript">TypeScript</option>
+        <option value="Python">Python</option>
+        <option value="Go">Go</option>
+        <option value="JavaScript">JavaScript</option>
+      </select>
+    </div>
+    <div class="card" id="repos-list">
+      <!-- dynamically filled -->
+    </div>
+  </div>
+
+  <!-- LANGS PANEL -->
+  <div id="panel-langs" class="panel">
+    <div class="grid2">
+      <div class="card">
+        <div class="card-title">Użycie języków</div>
+        <div id="lang-bars"></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Stack technologiczny</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:10px">Frontend</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px">
+          <span class="badge badge-accent">React</span><span class="badge badge-accent">TypeScript</span><span class="badge badge-accent">Next.js</span><span class="badge badge-accent">TailwindCSS</span><span class="badge badge-accent">Vite</span>
+        </div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:10px">Backend</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px">
+          <span class="badge badge-green">Node.js</span><span class="badge badge-green">FastAPI</span><span class="badge badge-green">PostgreSQL</span><span class="badge badge-green">Redis</span><span class="badge badge-green">Go</span>
+        </div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:10px">DevOps & Narzędzia</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px">
+          <span class="badge badge-amber">Docker</span><span class="badge badge-amber">GitHub Actions</span><span class="badge badge-amber">Terraform</span><span class="badge badge-amber">AWS</span><span class="badge badge-amber">Grafana</span>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Poziom zaawansowania</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px">
+        <div>
+          <div style="font-size:12px;color:var(--muted);margin-bottom:8px">💪 Biegły (3+ lat)</div>
+          <div style="display:flex;flex-direction:column;gap:4px">
+            <span class="badge badge-green" style="display:inline-block;width:fit-content">JavaScript/TypeScript</span>
+            <span class="badge badge-green" style="display:inline-block;width:fit-content">Python</span>
+            <span class="badge badge-green" style="display:inline-block;width:fit-content">React</span>
+            <span class="badge badge-green" style="display:inline-block;width:fit-content">SQL / PostgreSQL</span>
+          </div>
+        </div>
+        <div>
+          <div style="font-size:12px;color:var(--muted);margin-bottom:8px">📈 Zaawansowany (1-3 lat)</div>
+          <div style="display:flex;flex-direction:column;gap:4px">
+            <span class="badge badge-accent" style="display:inline-block;width:fit-content">Go</span>
+            <span class="badge badge-accent" style="display:inline-block;width:fit-content">Docker / Kubernetes</span>
+            <span class="badge badge-accent" style="display:inline-block;width:fit-content">AWS</span>
+            <span class="badge badge-accent" style="display:inline-block;width:fit-content">Next.js</span>
+          </div>
+        </div>
+        <div>
+          <div style="font-size:12px;color:var(--muted);margin-bottom:8px">🌱 Uczę się</div>
+          <div style="display:flex;flex-direction:column;gap:4px">
+            <span class="badge badge-amber" style="display:inline-block;width:fit-content">Rust</span>
+            <span class="badge badge-amber" style="display:inline-block;width:fit-content">Machine Learning</span>
+            <span class="badge badge-amber" style="display:inline-block;width:fit-content">WebAssembly</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AI PANEL -->
+  <div id="panel-ai" class="panel" style="padding-bottom:0">
+    <div class="ai-layout">
+      <div class="ai-chips">
+        <button class="chip" onclick="aiAsk('Jak naprawić wyciek pamięci w React useEffect?')">wyciek pamięci useEffect</button>
+        <button class="chip" onclick="aiAsk('Wyjaśnij różnicę między async/await a Promise w JavaScript')">async/await vs Promise</button>
+        <button class="chip" onclick="aiAsk('Jak zoptymalizować wolne zapytania SQL?')">wolne zapytania SQL</button>
+        <button class="chip" onclick="aiAsk('Jakie są najlepsze praktyki TypeScript w 2024?')">TypeScript best practices</button>
+        <button class="chip" onclick="aiAsk('Wyjaśnij działanie Docker i kiedy go używać')">Docker — kiedy używać?</button>
+        <button class="chip" onclick="aiAsk('Jak działa garbage collection w JavaScript?')">garbage collection JS</button>
+      </div>
+      <div class="ai-messages" id="ai-messages">
+        <div class="ai-msg">
+          <div class="ai-avatar bot">AI</div>
+          <div class="ai-bubble">
+            Cześć! Jestem asystentem dla programistów. Mogę pomóc z:<br><br>
+            🐛 <strong>Debugowaniem</strong> — wklej kod z błędem<br>
+            📐 <strong>Architekturą</strong> — omówimy wzorce, projekty<br>
+            🔤 <strong>Językami</strong> — Python, JS/TS, Go, Rust i inne<br>
+            ⚡ <strong>Optymalizacją</strong> — wydajność, SQL, algorytmy<br><br>
+            O co pytasz?
+          </div>
+        </div>
+      </div>
+      <div class="ai-msg typing-indicator" id="typing-ind">
+        <div class="ai-avatar bot">AI</div>
+        <div class="ai-bubble"><div class="typing-dots"><span></span><span></span><span></span></div></div>
+      </div>
+      <div class="ai-input-row">
+        <textarea class="ai-input" id="ai-input" rows="2" placeholder="Zadaj pytanie o kod, błędy, architekturę..." onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();aiSend()}"></textarea>
+        <button class="btn btn-primary" onclick="aiSend()" style="align-self:flex-end">Wyślij</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<script>
+// ── Navigation ──────────────────────────────────────────────────────────────
+const titles = {dashboard:'Dashboard', repos:'Repozytoria', langs:'Języki & Stack', ai:'AI Asystent'};
+function showPanel(id) {
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
+  document.getElementById('panel-'+id).classList.add('active');
+  document.querySelectorAll('.nav-item')[['dashboard','repos','langs','ai'].indexOf(id)].classList.add('active');
+  document.getElementById('panel-title').textContent = titles[id];
+}
+
+function openLink(url) { window.open(url,'_blank'); }
+
+// ── Heatmap ─────────────────────────────────────────────────────────────────
+function buildHeatmap() {
+  const c = document.getElementById('heatmap');
+  if(!c) return;
+  for(let w=0;w<16;w++) {
+    const col = document.createElement('div');
+    col.className = 'heatmap-col';
+    for(let d=0;d<7;d++) {
+      const cell = document.createElement('div');
+      const r = Math.random();
+      const lvl = r<.35?0:r<.55?1:r<.72?2:r<.87?3:4;
+      cell.className = `hm-cell hm-${lvl}`;
+      col.appendChild(cell);
+    }
+    c.appendChild(col);
+  }
+}
+
+// ── Commit chart ─────────────────────────────────────────────────────────────
+function buildCommitChart() {
+  const c = document.getElementById('commit-chart');
+  if(!c) return;
+  const data = Array.from({length:30},()=>Math.floor(Math.random()*10)+1);
+  const max = Math.max(...data);
+  data.forEach(v=>{
+    const b = document.createElement('div');
+    b.className = 'commit-bar';
+    b.style.height = Math.round((v/max)*100)+'%';
+    b.title = v+' commitów';
+    c.appendChild(b);
+  });
+  const now = new Date();
+  const from = new Date(); from.setDate(now.getDate()-29);
+  document.getElementById('date-from').textContent = from.getDate()+'.'+(from.getMonth()+1);
+  document.getElementById('date-to').textContent = 'dziś';
+}
+
+// ── Language bars ────────────────────────────────────────────────────────────
+const langs = [
+  {name:'TypeScript', pct:38, color:'#3178c6'},
+  {name:'Python',     pct:24, color:'#3572a5'},
+  {name:'Go',         pct:16, color:'#00add8'},
+  {name:'JavaScript', pct:12, color:'#f1e05a'},
+  {name:'CSS',        pct:6,  color:'#563d7c'},
+  {name:'Inne',       pct:4,  color:'#555'},
+];
+function buildLangBars() {
+  const c = document.getElementById('lang-bars');
+  if(!c) return;
+  langs.forEach(l=>{
+    c.innerHTML += `
+      <div class="lang-row"><span class="lang-name">${l.name}</span><span class="lang-pct">${l.pct}%</span></div>
+      <div class="lang-bar-track"><div class="lang-bar-fill" style="width:${l.pct}%;background:${l.color}"></div></div>
+    `;
+  });
+}
+
+// ── Sample repos ─────────────────────────────────────────────────────────────
+const sampleRepos = [
+  {name:'api-dashboard', desc:'Narzędzie do monitorowania REST API w czasie rzeczywistym', lang:'TypeScript', stars:312, forks:48, updated:'2 godz. temu', topics:['react','typescript','api']},
+  {name:'devspace-cli',  desc:'Zestaw narzędzi CLI usprawniających codzienną pracę dewelopera', lang:'Go', stars:248, forks:31, updated:'wczoraj', topics:['cli','go','developer-tools']},
+  {name:'ml-experiments',desc:'Eksperymenty i notebooki z uczenia maszynowego', lang:'Python', stars:187, forks:22, updated:'3 dni temu', topics:['python','machine-learning','jupyter']},
+  {name:'portfolio',     desc:'Strona osobista i portfolio zbudowane w Next.js', lang:'JavaScript', stars:100, forks:15, updated:'tydzień temu', topics:['nextjs','tailwind','portfolio']},
+  {name:'db-migrations', desc:'Narzędzie do zarządzania migracjami bazy danych', lang:'Python', stars:74, forks:9, updated:'2 tygodnie temu', topics:['python','postgresql','migrations']},
+  {name:'auth-service',  desc:'Mikroserwis autoryzacyjny JWT + OAuth2', lang:'TypeScript', stars:58, forks:7, updated:'miesiąc temu', topics:['typescript','auth','microservice']},
+];
+
+let currentRepos = sampleRepos;
+
+function renderRepos(repos) {
+  const c = document.getElementById('repos-list');
+  if(!repos.length){ c.innerHTML='<div style="color:var(--muted);padding:20px;text-align:center">Brak repozytoriów</div>'; return; }
+  c.innerHTML = repos.map(r=>`
+    <div class="repo-item" data-lang="${r.lang}">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
+        <span class="repo-name">${r.name}</span>
+        <span class="badge badge-accent" style="font-size:10px">${r.lang}</span>
+      </div>
+      <div class="repo-desc">${r.desc}</div>
+      <div class="repo-meta">
+        <span>⭐ ${r.stars}</span>
+        <span>🍴 ${r.forks}</span>
+        <span>🕐 ${r.updated}</span>
+      </div>
+      <div style="margin-top:8px;display:flex;gap:6px">${r.topics.map(t=>`<span class="repo-tag">${t}</span>`).join('')}</div>
+    </div>
+  `).join('');
+}
+
+function filterRepos() {
+  const q = document.getElementById('repo-search').value.toLowerCase();
+  const l = document.getElementById('repo-lang').value;
+  const filtered = currentRepos.filter(r=>
+    (!q || r.name.toLowerCase().includes(q) || r.desc.toLowerCase().includes(q)) &&
+    (!l || r.lang === l)
+  );
+  renderRepos(filtered);
+}
+
+// ── GitHub API ────────────────────────────────────────────────────────────────
+async function loadGitHub() {
+  const token = document.getElementById('gh-token').value.trim();
+  if(!token){ alert('Wpisz token GitHub aby załadować dane.'); return; }
+  const headers = {Authorization:'token '+token, Accept:'application/vnd.github.v3+json'};
+  try {
+    const [user, repos] = await Promise.all([
+      fetch('https://api.github.com/user',{headers}).then(r=>r.json()),
+      fetch('https://api.github.com/user/repos?per_page=100&sort=updated',{headers}).then(r=>r.json())
+    ]);
+    if(user.message){ alert('Błędny token: '+user.message); return; }
+
+    document.getElementById('stat-stars').textContent = repos.reduce((s,r)=>s+r.stargazers_count,0);
+    document.getElementById('stat-repos').textContent = user.public_repos;
+    document.getElementById('stat-followers').textContent = user.followers;
+
+    currentRepos = repos.map(r=>({
+      name: r.name,
+      desc: r.description || 'Brak opisu',
+      lang: r.language || '—',
+      stars: r.stargazers_count,
+      forks: r.forks_count,
+      updated: new Date(r.updated_at).toLocaleDateString('pl'),
+      topics: r.topics||[]
+    }));
+    renderRepos(currentRepos);
+
+    const topR = [...currentRepos].sort((a,b)=>b.stars-a.stars).slice(0,4);
+    document.getElementById('top-repos').innerHTML = topR.map(r=>`
+      <div style="margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--border)">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <span style="color:var(--accent);font-weight:600">${r.name}</span>
+          <span style="color:var(--amber);font-size:12px">⭐ ${r.stars}</span>
+        </div>
+        <div style="font-size:12px;color:var(--muted);margin-top:4px">${r.desc}</div>
+      </div>
+    `).join('');
+
+    alert('✅ Dane GitHub załadowane pomyślnie dla @'+user.login+'!');
+  } catch(e) {
+    alert('Błąd połączenia: '+e.message);
+  }
+}
+
+// ── AI Chat ───────────────────────────────────────────────────────────────────
+function aiAsk(q) { document.getElementById('ai-input').value=q; aiSend(); }
+
+async function aiSend() {
+  const input = document.getElementById('ai-input');
+  const q = input.value.trim();
+  if(!q) return;
+  input.value = '';
+
+  const msgs = document.getElementById('ai-messages');
+  const typing = document.getElementById('typing-ind');
+
+  msgs.innerHTML += `
+    <div class="ai-msg">
+      <div class="ai-avatar user">Ty</div>
+      <div class="ai-bubble user">${q.replace(/</g,'&lt;')}</div>
+    </div>`;
+
+  msgs.parentElement.insertBefore(typing, null);
+  typing.style.display='flex';
+  msgs.scrollTop=msgs.scrollHeight;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-6',
+        max_tokens:1000,
+        system:'Jesteś doświadczonym programistą i mentorem. Odpowiadaj po polsku. Bądź konkretny, praktyczny i pomocny. Gdy podajesz przykłady kodu — używaj bloków kodu. Wyjaśniaj złożone koncepty prosto i jasno.',
+        messages:[{role:'user',content:q}]
+      })
+    });
+    const data = await res.json();
+    let text = data.content?.map(b=>b.text||'').join('') || 'Błąd odpowiedzi.';
+
+    // Format code blocks
+    text = text.replace(/```(\w*)\n?([\s\S]*?)```/g,(_,lang,code)=>`<pre><code>${code.replace(/</g,'&lt;')}</code></pre>`);
+    text = text.replace(/`([^`]+)`/g,'<code>$1</code>');
+    text = text.replace(/\n/g,'<br>');
+
+    typing.style.display='none';
+    msgs.innerHTML += `
+      <div class="ai-msg">
+        <div class="ai-avatar bot">AI</div>
+        <div class="ai-bubble">${text}</div>
+      </div>`;
+  } catch(e) {
+    typing.style.display='none';
+    msgs.innerHTML += `<div class="ai-msg"><div class="ai-avatar bot">AI</div><div class="ai-bubble red">Błąd połączenia. Spróbuj ponownie.</div></div>`;
+  }
+  msgs.scrollTop=msgs.scrollHeight;
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+buildHeatmap();
+buildCommitChart();
+buildLangBars();
+renderRepos(sampleRepos);
+</script>
+</body>
+</html>
