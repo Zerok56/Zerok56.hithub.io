@@ -219,7 +219,7 @@
     </div>
     <div class="token-form">
       <input class="token-input" id="gh-token" type="password" placeholder="GitHub Personal Access Token (opcjonalne)">
-      <button class="btn" onclick="loadGitHub()">Załaduj dane GitHub</button>
+      <button class="btn" onclick="loadGitHub()">Załaduj dane GitHub</button><button class="btn" onclick="setupGemini()">Gemini API</button>
     </div>
   </div>
 
@@ -637,57 +637,7 @@ async function loadGitHub() {
 // ── AI Chat ───────────────────────────────────────────────────────────────────
 function aiAsk(q) { document.getElementById('ai-input').value=q; aiSend(); }
 
-async function aiSend() {
-  const input = document.getElementById('ai-input');
-  const q = input.value.trim();
-  if(!q) return;
-  input.value = '';
 
-  const msgs = document.getElementById('ai-messages');
-  const typing = document.getElementById('typing-ind');
-
-  msgs.innerHTML += `
-    <div class="ai-msg">
-      <div class="ai-avatar user">Ty</div>
-      <div class="ai-bubble user">${q.replace(/</g,'&lt;')}</div>
-    </div>`;
-
-  msgs.parentElement.insertBefore(typing, null);
-  typing.style.display='flex';
-  msgs.scrollTop=msgs.scrollHeight;
-
-  try {
-    throw new Error('AI wymaga backendu proxy z kluczem API.');
-    const res = await fetch('https://api.anthropic.com/v1/messages',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({
-        model:'claude-sonnet-4-6',
-        max_tokens:1000,
-        system:'Jesteś doświadczonym programistą i mentorem. Odpowiadaj po polsku. Bądź konkretny, praktyczny i pomocny. Gdy podajesz przykłady kodu — używaj bloków kodu. Wyjaśniaj złożone koncepty prosto i jasno.',
-        messages:[{role:'user',content:q}]
-      })
-    });
-    const data = await res.json();
-    let text = data.content?.map(b=>b.text||'').join('') || 'Błąd odpowiedzi.';
-
-    // Format code blocks
-    text = text.replace(/```(\w*)\n?([\s\S]*?)```/g,(_,lang,code)=>`<pre><code>${code.replace(/</g,'&lt;')}</code></pre>`);
-    text = text.replace(/`([^`]+)`/g,'<code>$1</code>');
-    text = text.replace(/\n/g,'<br>');
-
-    typing.style.display='none';
-    msgs.innerHTML += `
-      <div class="ai-msg">
-        <div class="ai-avatar bot">AI</div>
-        <div class="ai-bubble">${text}</div>
-      </div>`;
-  } catch(e) {
-    typing.style.display='none';
-    msgs.innerHTML += `<div class="ai-msg"><div class="ai-avatar bot">AI</div><div class="ai-bubble red">Błąd połączenia. Spróbuj ponownie.</div></div>`;
-  }
-  msgs.scrollTop=msgs.scrollHeight;
-}
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 buildHeatmap();
@@ -695,5 +645,77 @@ buildCommitChart();
 buildLangBars();
 renderRepos(sampleRepos);
 </script>
+
+<script>
+function setupGemini(){
+  const current = localStorage.getItem('gemini_api_key') || '';
+  const key = prompt('Wklej Google Gemini API Key:', current);
+  if(key !== null){
+    localStorage.setItem('gemini_api_key', key.trim());
+    alert('Klucz Gemini zapisany.');
+  }
+}
+
+async function aiSend() {
+  const input = document.getElementById('ai-input');
+  const q = input.value.trim();
+  if(!q) return;
+  input.value='';
+
+  const msgs = document.getElementById('ai-messages');
+
+  msgs.innerHTML += `
+    <div class="ai-msg">
+      <div class="ai-avatar user">Ty</div>
+      <div class="ai-bubble user">${q.replace(/</g,'&lt;')}</div>
+    </div>`;
+
+  try{
+    const key = localStorage.getItem('gemini_api_key');
+    if(!key) throw new Error('Najpierw dodaj Gemini API Key.');
+
+    const res = await fetch(
+      'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' + encodeURIComponent(key),
+      {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({
+          contents:[{
+            parts:[{text:q}]
+          }]
+        })
+      }
+    );
+
+    const data = await res.json();
+
+    if(!res.ok){
+      throw new Error(data.error?.message || 'Błąd Gemini API');
+    }
+
+    let text =
+      data.candidates?.[0]?.content?.parts?.map(p => p.text || '').join('')
+      || 'Brak odpowiedzi';
+
+    text = text.replace(/</g,'&lt;').replace(/\n/g,'<br>');
+
+    msgs.innerHTML += `
+      <div class="ai-msg">
+        <div class="ai-avatar bot">AI</div>
+        <div class="ai-bubble">${text}</div>
+      </div>`;
+
+  }catch(e){
+    msgs.innerHTML += `
+      <div class="ai-msg">
+        <div class="ai-avatar bot">AI</div>
+        <div class="ai-bubble red">${e.message}</div>
+      </div>`;
+  }
+
+  msgs.scrollTop = msgs.scrollHeight;
+}
+</script>
+
 </body>
 </html>
