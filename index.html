@@ -3,809 +3,672 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DevSpace — Panel Programisty</title>
+<title>Układ Hormonalny — Biologia</title>
 <style>
-  :root {
-    --bg: #0d1117;
-    --bg2: #161b22;
-    --bg3: #21262d;
-    --border: #30363d;
-    --text: #e6edf3;
-    --muted: #8b949e;
-    --accent: #58a6ff;
-    --green: #3fb950;
-    --amber: #d29922;
-    --red: #f85149;
-    --purple: #bc8cff;
-    --mono: 'Courier New', Courier, monospace;
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 14px; min-height: 100vh; }
-
-  /* Layout */
-  .shell { display: flex; height: 100vh; overflow: hidden; }
-  .sidebar { width: 220px; background: var(--bg2); border-right: 1px solid var(--border); display: flex; flex-direction: column; flex-shrink: 0; }
-  .main { flex: 1; overflow-y: auto; display: flex; flex-direction: column; }
-
-  /* Sidebar */
-  .logo { padding: 20px 16px 12px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid var(--border); }
-  .logo-icon { width: 32px; height: 32px; background: var(--accent); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 16px; color: #0d1117; flex-shrink: 0; }
-  .logo-name { font-weight: 600; font-size: 15px; }
-  .logo-sub { font-size: 11px; color: var(--muted); font-family: var(--mono); }
-  nav { padding: 12px 8px; flex: 1; }
-  .nav-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; padding: 8px 8px 4px; }
-  .nav-item { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 6px; cursor: pointer; color: var(--muted); transition: all .15s; border: none; background: none; width: 100%; text-align: left; font-size: 13px; }
-  .nav-item:hover { background: var(--bg3); color: var(--text); }
-  .nav-item.active { background: rgba(88,166,255,.12); color: var(--accent); }
-  .nav-item svg { width: 16px; height: 16px; flex-shrink: 0; }
-  .status { padding: 12px 16px; border-top: 1px solid var(--border); }
-  .status-dot { width: 8px; height: 8px; background: var(--green); border-radius: 50%; display: inline-block; margin-right: 6px; animation: pulse 2s infinite; }
-  @keyframes pulse { 0%,100%{opacity:1}50%{opacity:.4} }
-
-  /* Topbar */
-  .topbar { padding: 14px 24px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; background: var(--bg); position: sticky; top: 0; z-index: 10; }
-  .topbar-title { font-size: 16px; font-weight: 600; }
-  .topbar-meta { font-size: 12px; color: var(--muted); font-family: var(--mono); }
-  .token-form { display: flex; gap: 8px; align-items: center; }
-  .token-input { background: var(--bg2); border: 1px solid var(--border); border-radius: 6px; padding: 6px 10px; color: var(--text); font-size: 12px; font-family: var(--mono); width: 260px; }
-  .token-input:focus { outline: none; border-color: var(--accent); }
-  .btn { padding: 6px 14px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg3); color: var(--text); cursor: pointer; font-size: 12px; transition: all .15s; }
-  .btn:hover { border-color: var(--accent); color: var(--accent); }
-  .btn-primary { background: var(--accent); color: #0d1117; border-color: var(--accent); font-weight: 600; }
-  .btn-primary:hover { background: #79beff; color: #0d1117; }
-
-  /* Panels */
-  .panel { display: none; padding: 24px; }
-  .panel.active { display: block; }
-
-  /* Metrics grid */
-  .metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
-  .metric-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; padding: 16px; }
-  .metric-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 8px; }
-  .metric-value { font-size: 26px; font-weight: 600; font-family: var(--mono); }
-  .metric-sub { font-size: 11px; color: var(--muted); margin-top: 4px; }
-  .green { color: var(--green); } .red { color: var(--red); } .amber { color: var(--amber); } .accent { color: var(--accent); } .purple { color: var(--purple); }
-
-  /* Cards */
-  .card { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; padding: 16px; margin-bottom: 16px; }
-  .card-title { font-size: 13px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 14px; }
-  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-
-  /* Contribution heatmap */
-  .heatmap { display: flex; gap: 3px; }
-  .heatmap-col { display: flex; flex-direction: column; gap: 3px; }
-  .hm-cell { width: 12px; height: 12px; border-radius: 2px; background: var(--bg3); }
-  .hm-0 { background: var(--bg3); }
-  .hm-1 { background: #0e4429; }
-  .hm-2 { background: #006d32; }
-  .hm-3 { background: #26a641; }
-  .hm-4 { background: #39d353; }
-  .hm-labels { display: flex; justify-content: space-between; font-size: 10px; color: var(--muted); margin-top: 6px; font-family: var(--mono); }
-
-  /* Language bars */
-  .lang-bar-track { height: 6px; background: var(--bg3); border-radius: 3px; margin: 6px 0; overflow: hidden; }
-  .lang-bar-fill { height: 100%; border-radius: 3px; }
-  .lang-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
-  .lang-name { font-size: 13px; }
-  .lang-pct { font-size: 12px; color: var(--muted); font-family: var(--mono); }
-
-  /* Repo list */
-  .repo-item { padding: 14px 0; border-bottom: 1px solid var(--border); }
-  .repo-item:last-child { border-bottom: none; }
-  .repo-name { font-weight: 600; color: var(--accent); font-size: 14px; cursor: pointer; }
-  .repo-name:hover { text-decoration: underline; }
-  .repo-desc { color: var(--muted); font-size: 12px; margin: 4px 0 8px; }
-  .repo-meta { display: flex; gap: 16px; font-size: 12px; color: var(--muted); }
-  .repo-tag { background: rgba(88,166,255,.1); color: var(--accent); border: 1px solid rgba(88,166,255,.25); padding: 2px 8px; border-radius: 12px; font-size: 11px; }
-
-  /* Activity feed */
-  .feed-item { display: flex; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); align-items: flex-start; }
-  .feed-item:last-child { border-bottom: none; }
-  .feed-icon { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 13px; }
-  .feed-text { flex: 1; }
-  .feed-main { font-size: 13px; line-height: 1.5; }
-  .feed-time { font-size: 11px; color: var(--muted); font-family: var(--mono); margin-top: 2px; }
-
-  /* AI Chat */
-  .ai-layout { display: flex; flex-direction: column; height: calc(100vh - 120px); }
-  .ai-messages { flex: 1; overflow-y: auto; padding-bottom: 16px; }
-  .ai-msg { display: flex; gap: 10px; margin-bottom: 16px; }
-  .ai-avatar { width: 30px; height: 30px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; flex-shrink: 0; margin-top: 2px; }
-  .ai-avatar.bot { background: rgba(88,166,255,.15); color: var(--accent); border: 1px solid rgba(88,166,255,.2); }
-  .ai-avatar.user { background: rgba(63,185,80,.12); color: var(--green); border: 1px solid rgba(63,185,80,.2); }
-  .ai-bubble { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; font-size: 13px; line-height: 1.7; max-width: 780px; }
-  .ai-bubble.user { background: rgba(88,166,255,.06); }
-  .ai-bubble pre { background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 10px; margin: 8px 0; overflow-x: auto; font-size: 12px; font-family: var(--mono); }
-  .ai-bubble code { font-family: var(--mono); font-size: 12px; background: var(--bg); padding: 1px 5px; border-radius: 3px; color: var(--purple); }
-  .ai-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
-  .chip { padding: 5px 12px; border: 1px solid var(--border); border-radius: 16px; background: var(--bg2); color: var(--muted); font-size: 12px; cursor: pointer; transition: all .15s; }
-  .chip:hover { border-color: var(--accent); color: var(--accent); }
-  .ai-input-row { display: flex; gap: 10px; padding-top: 12px; border-top: 1px solid var(--border); }
-  .ai-input { flex: 1; background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; color: var(--text); font-size: 13px; resize: none; }
-  .ai-input:focus { outline: none; border-color: var(--accent); }
-  .typing-indicator { display: none; }
-  .typing-dots span { display: inline-block; width: 6px; height: 6px; background: var(--muted); border-radius: 50%; margin: 0 2px; animation: bounce 1.2s infinite; }
-  .typing-dots span:nth-child(2){animation-delay:.2s}.typing-dots span:nth-child(3){animation-delay:.4s}
-  @keyframes bounce{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-5px)}}
-
-  /* Scrollbar */
-  ::-webkit-scrollbar { width: 6px; }
-  ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
-
-  /* Badge */
-  .badge { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; padding: 2px 8px; border-radius: 12px; }
-  .badge-green { background: rgba(63,185,80,.1); color: var(--green); border: 1px solid rgba(63,185,80,.2); }
-  .badge-amber { background: rgba(210,153,34,.1); color: var(--amber); border: 1px solid rgba(210,153,34,.2); }
-  .badge-red { background: rgba(248,81,73,.1); color: var(--red); border: 1px solid rgba(248,81,73,.2); }
-  .badge-accent { background: rgba(88,166,255,.1); color: var(--accent); border: 1px solid rgba(88,166,255,.2); }
-
-  /* Commit chart */
-  .commit-chart { height: 60px; display: flex; align-items: flex-end; gap: 2px; }
-  .commit-bar { flex: 1; border-radius: 2px 2px 0 0; background: rgba(88,166,255,.3); transition: background .15s; min-height: 3px; }
-  .commit-bar:hover { background: var(--accent); }
-
-  /* Token hint */
-  .hint { font-size: 12px; color: var(--muted); background: rgba(210,153,34,.08); border: 1px solid rgba(210,153,34,.2); border-radius: 6px; padding: 10px 14px; margin-bottom: 16px; }
-  .hint a { color: var(--amber); }
-
-  /* Spinner */
-  .spinner { width: 16px; height: 16px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .7s linear infinite; display: inline-block; }
-  @keyframes spin { to { transform: rotate(360deg); } }
-
-  @media (max-width: 700px) {
-    .sidebar { display: none; }
-    .metrics { grid-template-columns: 1fr 1fr; }
-    .grid2 { grid-template-columns: 1fr; }
-    .token-form { flex-direction: column; align-items: flex-start; }
-    .token-input { width: 100%; }
-  }
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@700&display=swap');
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#0b1a10;
+  --bg2:#0f2218;
+  --bg3:#162d1e;
+  --bg4:#1c3827;
+  --border:#274d35;
+  --border2:#2f5c3e;
+  --text:#e2f0e6;
+  --muted:#7aaa8a;
+  --muted2:#4d7a5e;
+  --green:#4caf72;
+  --green-bright:#6ddc94;
+  --green-dim:#0d2e1a;
+  --green-mid:#1a4a28;
+  --teal:#2ecfc4;
+  --teal-dim:#0a2e2c;
+  --amber:#d4a832;
+  --amber-dim:#2e2208;
+  --red:#e05c5c;
+  --red-dim:#2e1010;
+  --blue:#5ba8d4;
+  --blue-dim:#0d2233;
+  --purple:#9b7fe8;
+  --purple-dim:#1e1540;
+  --leaf:#3a8f52;
+}
+html{scroll-behavior:smooth;}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-height:1.65;min-height:100vh;}
+ 
+/* ── NAV ── */
+nav{position:sticky;top:0;z-index:200;background:rgba(11,26,16,.95);backdrop-filter:blur(14px);border-bottom:1px solid var(--border);padding:0 2rem;display:flex;align-items:center;gap:1.5rem;height:54px;}
+.nav-logo{font-family:'Playfair Display',serif;font-size:17px;color:var(--green-bright);text-decoration:none;white-space:nowrap;display:flex;align-items:center;gap:8px;}
+.nav-logo span{font-size:20px;}
+.nav-links{display:flex;gap:1.25rem;list-style:none;margin-left:auto;}
+.nav-links a{color:var(--muted);text-decoration:none;font-size:13px;font-weight:500;transition:color .2s;padding:4px 0;}
+.nav-links a:hover{color:var(--green-bright);}
+ 
+/* ── HERO ── */
+.hero{position:relative;overflow:hidden;padding:5.5rem 2rem 4.5rem;text-align:center;border-bottom:1px solid var(--border);}
+.hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 70% 55% at 50% -10%,rgba(76,175,114,.18) 0%,transparent 65%);pointer-events:none;}
+.hero::after{content:'🌿';position:absolute;font-size:180px;opacity:.04;top:50%;left:50%;transform:translate(-50%,-55%);pointer-events:none;filter:blur(2px);}
+.hero-eyebrow{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--green);background:var(--green-dim);border:1px solid rgba(76,175,114,.3);border-radius:99px;padding:5px 14px;margin-bottom:1.5rem;}
+.hero h1{font-family:'Playfair Display',serif;font-size:clamp(2.2rem,7vw,4rem);font-weight:700;line-height:1.1;margin-bottom:1rem;background:linear-gradient(135deg,#e2f0e6 20%,var(--green-bright) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.hero-sub{color:var(--muted);font-size:1rem;max-width:580px;margin:0 auto 2rem;line-height:1.7;}
+.hero-stats{display:flex;justify-content:center;gap:2rem;flex-wrap:wrap;}
+.hero-stat{text-align:center;}
+.hero-stat .num{font-size:22px;font-weight:700;color:var(--green-bright);}
+.hero-stat .lbl{font-size:11px;color:var(--muted2);text-transform:uppercase;letter-spacing:.06em;}
+ 
+/* ── LAYOUT ── */
+.container{max-width:900px;margin:0 auto;padding:3rem 2rem 6rem;display:flex;flex-direction:column;gap:2.5rem;}
+ 
+/* ── SECTION CARD ── */
+.sec{background:var(--bg2);border:1px solid var(--border);border-radius:14px;overflow:hidden;}
+.sec-head{display:flex;align-items:center;gap:14px;padding:1.2rem 1.5rem;border-bottom:1px solid var(--border);}
+.sec-num{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:4px 11px;border-radius:99px;}
+.sn-green{background:var(--green-dim);color:var(--green);border:1px solid rgba(76,175,114,.3);}
+.sn-teal{background:var(--teal-dim);color:var(--teal);border:1px solid rgba(46,207,196,.3);}
+.sn-amber{background:var(--amber-dim);color:var(--amber);border:1px solid rgba(212,168,50,.3);}
+.sn-red{background:var(--red-dim);color:var(--red);border:1px solid rgba(224,92,92,.3);}
+.sn-purple{background:var(--purple-dim);color:var(--purple);border:1px solid rgba(155,127,232,.3);}
+.sec-head h2{font-size:17px;font-weight:600;color:var(--text);}
+.sec-body{padding:1.5rem;}
+ 
+/* ── TYPOGRAPHY ── */
+p.body-text{color:var(--muted);font-size:14px;line-height:1.75;margin-bottom:.9rem;}
+p.body-text strong{color:var(--text);}
+h3.sub{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.09em;color:var(--muted2);margin:1.25rem 0 .6rem;}
+ 
+/* ── INFO BOXES ── */
+.info{border-radius:10px;padding:13px 16px;font-size:13.5px;line-height:1.7;margin:1rem 0;border-left:3px solid;}
+.info strong{color:var(--text);}
+.info.green{background:var(--green-dim);border-color:var(--green);color:#9dd4ae;}
+.info.teal{background:var(--teal-dim);border-color:var(--teal);color:#7de0d9;}
+.info.amber{background:var(--amber-dim);border-color:var(--amber);color:#dfc47a;}
+.info.red{background:var(--red-dim);border-color:var(--red);color:#f09898;}
+.info.blue{background:var(--blue-dim);border-color:var(--blue);color:#8ec8e8;}
+.info.purple{background:var(--purple-dim);border-color:var(--purple);color:#bba8f0;}
+ 
+/* ── GLAND CARDS ── */
+.gland-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:9px;margin:1rem 0;}
+.gland-card{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:11px 13px;display:flex;flex-direction:column;gap:5px;}
+.gland-card .g-name{font-size:13px;font-weight:600;color:var(--text);}
+.gland-card .g-hormone{font-size:12px;color:var(--muted2);}
+.gland-card .g-role{font-size:11.5px;color:var(--muted);line-height:1.5;}
+.g-dot{width:7px;height:7px;border-radius:50%;margin-bottom:2px;}
+ 
+/* ── COMPARE TABLE ── */
+.compare-wrap{overflow-x:auto;margin:1rem 0;}
+table.compare{width:100%;border-collapse:collapse;font-size:13px;}
+table.compare th{padding:9px 14px;font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.07em;border-bottom:1px solid var(--border);}
+table.compare td{padding:9px 14px;border-bottom:1px solid var(--border);color:var(--muted);line-height:1.55;}
+table.compare tr:last-child td{border-bottom:none;}
+table.compare .col-nad{color:var(--red);}
+table.compare .col-nie{color:var(--blue);}
+table.compare th.col-nad{color:var(--red);}
+table.compare th.col-nie{color:var(--blue);}
+table.compare .row-label{color:var(--muted2);font-weight:500;font-size:12px;}
+ 
+/* ── TWO COLUMN COMPARE CARDS ── */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:1rem 0;}
+.compare-card{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:1rem;border-top:3px solid;}
+.compare-card.nad{border-top-color:var(--red);}
+.compare-card.nie{border-top-color:var(--blue);}
+.compare-card h4{font-size:13px;font-weight:600;margin-bottom:8px;}
+.compare-card.nad h4{color:var(--red);}
+.compare-card.nie h4{color:var(--blue);}
+.compare-card ul{padding-left:1rem;}
+.compare-card li{font-size:13px;color:var(--muted);line-height:1.65;}
+.compare-card .sub-note{font-size:11.5px;color:var(--muted2);margin-bottom:7px;}
+ 
+/* ── FLOW / ARROWS ── */
+.flow{display:flex;flex-direction:column;gap:8px;margin:1rem 0;}
+.flow-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.flow-box{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:8px 15px;font-size:13px;font-weight:500;}
+.flow-box.trigger{border-color:var(--red);color:#f09898;}
+.flow-box.result{border-color:var(--green);color:#9dd4ae;}
+.flow-box.trigger2{border-color:var(--green);color:#9dd4ae;}
+.flow-box.result2{border-color:var(--red);color:#f09898;}
+.flow-arr{color:var(--green);font-size:18px;font-weight:700;}
+ 
+/* ── STRESS TILES ── */
+.stress-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:9px;margin:1rem 0;}
+.stress-tile{background:var(--bg3);border:1px solid rgba(212,168,50,.3);border-radius:10px;padding:11px 13px;border-left:3px solid var(--amber);}
+.stress-tile .st-icon{font-size:20px;margin-bottom:5px;}
+.stress-tile .st-text{font-size:13px;color:#dfc47a;line-height:1.5;}
+ 
+/* ── HORMONES TABLE ── */
+.hormone-table{width:100%;border-collapse:collapse;font-size:13px;margin:1rem 0;}
+.hormone-table th{text-align:left;padding:9px 13px;font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted2);border-bottom:1px solid var(--border);}
+.hormone-table td{padding:9px 13px;border-bottom:1px solid var(--border);color:var(--muted);vertical-align:top;}
+.hormone-table tr:last-child td{border-bottom:none;}
+.hormone-table .hn{color:var(--text);font-weight:500;}
+.hormone-table .hg{color:var(--green);font-size:12px;}
+.hormone-table tr:hover td{background:var(--bg3);}
+ 
+/* ── KEYWORDS ── */
+.kw-grid{display:flex;flex-wrap:wrap;gap:8px;}
+.kw{background:var(--bg3);border:1px solid var(--border);border-radius:99px;font-size:12.5px;padding:5px 15px;color:var(--text);transition:all .18s;cursor:default;}
+.kw:hover{border-color:var(--green);background:var(--green-dim);color:var(--green-bright);}
+ 
+/* ── PORÓWNANIE NERWOWY VS HORMONALNY ── */
+.vs-grid{display:grid;grid-template-columns:1fr auto 1fr;gap:12px;align-items:start;margin:1rem 0;}
+.vs-card{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:1rem;}
+.vs-card h4{font-size:13px;font-weight:600;margin-bottom:8px;}
+.vs-card ul{padding-left:1rem;}
+.vs-card li{font-size:12.5px;color:var(--muted);line-height:1.65;}
+.vs-divider{display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:var(--muted2);padding-top:1.5rem;}
+ 
+/* ── QUIZ ── */
+.quiz-sec{background:var(--bg2);border:1px solid var(--border);border-radius:14px;overflow:hidden;}
+.quiz-head{padding:1.2rem 1.5rem;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;}
+.quiz-head h2{font-size:17px;font-weight:600;}
+.quiz-body{padding:1.5rem;}
+.q-wrap{display:none;flex-direction:column;gap:12px;}
+.q-wrap.active{display:flex;}
+.q-wrap p{font-size:15px;font-weight:500;line-height:1.55;}
+.q-opts{display:flex;flex-direction:column;gap:8px;}
+.q-btn{background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:11px 15px;font-size:13.5px;text-align:left;color:var(--text);cursor:pointer;transition:border-color .15s,background .15s;font-family:'Inter',sans-serif;}
+.q-btn:hover{border-color:var(--green);background:var(--green-dim);}
+.q-btn.correct{border-color:var(--green);background:var(--green-dim);color:#9dd4ae;}
+.q-btn.wrong{border-color:var(--red);background:var(--red-dim);color:#f09898;}
+.q-fb{display:none;font-size:13px;padding:11px 14px;border-radius:8px;margin-top:2px;}
+.q-fb.ok{display:block;background:var(--green-dim);border-left:3px solid var(--green);color:#9dd4ae;}
+.q-fb.err{display:block;background:var(--red-dim);border-left:3px solid var(--red);color:#f09898;}
+.q-fb strong{color:var(--text);}
+.quiz-nav{display:flex;align-items:center;gap:12px;margin-top:1.25rem;}
+.btn{background:var(--bg3);border:1px solid var(--border2);border-radius:9px;color:var(--text);font-size:13px;font-weight:500;padding:9px 20px;cursor:pointer;transition:all .15s;font-family:'Inter',sans-serif;}
+.btn:hover{border-color:var(--green);background:var(--green-dim);color:var(--green-bright);}
+.btn.primary{background:var(--green);border-color:var(--green);color:#0b1a10;}
+.btn.primary:hover{background:var(--green-bright);border-color:var(--green-bright);}
+.btn:disabled{opacity:.4;cursor:default;pointer-events:none;}
+.q-counter{margin-left:auto;font-size:13px;color:var(--muted2);}
+.progress-bar{width:100%;height:3px;background:var(--border);border-radius:99px;margin-bottom:1.5rem;overflow:hidden;}
+.progress-fill{height:100%;background:var(--green);border-radius:99px;transition:width .3s ease;}
+.quiz-score{display:none;text-align:center;padding:2rem 0 1rem;flex-direction:column;align-items:center;gap:12px;}
+.score-big{font-size:52px;font-weight:700;color:var(--green-bright);}
+.score-msg{font-size:15px;color:var(--muted);}
+ 
+@media(max-width:620px){
+  nav{padding:0 1rem;gap:1rem;}
+  .hero{padding:3.5rem 1rem 3rem;}
+  .container{padding:2rem 1rem;}
+  .two-col{grid-template-columns:1fr;}
+  .vs-grid{grid-template-columns:1fr;gap:8px;}
+  .vs-divider{display:none;}
+  .hero-stats{gap:1.25rem;}
+}
 </style>
 </head>
 <body>
-<div class="shell">
-
-<!-- Sidebar -->
-<aside class="sidebar">
-  <div class="logo">
-    <div class="logo-icon">&lt;/&gt;</div>
-    <div>
-      <div class="logo-name">DevSpace</div>
-      <div class="logo-sub">panel programisty</div>
-    </div>
+ 
+<nav>
+  <a class="nav-logo" href="#"><span>🌿</span>Biologia — Rozdz. 11</a>
+  <ul class="nav-links">
+    <li><a href="#s11">11.1 Budowa</a></li>
+    <li><a href="#s12">11.2 Regulacja</a></li>
+    <li><a href="#s13">11.3 Tarczyca</a></li>
+    <li><a href="#s14">Stres</a></li>
+    <li><a href="#quiz">Quiz</a></li>
+  </ul>
+</nav>
+ 
+<section class="hero">
+  <div class="hero-eyebrow">🧬 Układ Hormonalny</div>
+  <h1>Hormony, gruczoły<br>i regulacja organizmu</h1>
+  <p class="hero-sub">Kompleksowy materiał z rozdziału 11 — dowiedz się, jak hormony sterują całym Twoim ciałem, co się dzieje gdy tarczyca szwankuje i dlaczego adrenalina sprawia, że serce bije szybciej.</p>
+  <div class="hero-stats">
+    <div class="hero-stat"><div class="num">3</div><div class="lbl">podrozdziały</div></div>
+    <div class="hero-stat"><div class="num">8+</div><div class="lbl">gruczołów dokrewnych</div></div>
+    <div class="hero-stat"><div class="num">13</div><div class="lbl">pojęć kluczowych</div></div>
+    <div class="hero-stat"><div class="num">8</div><div class="lbl">pytań w quizie</div></div>
   </div>
-  <nav>
-    <div class="nav-label">Widoki</div>
-    <button class="nav-item active" onclick="showPanel('dashboard')">
-      <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M3 3h7v9H3zm11 0h7v5h-7zm0 9h7v9h-7zM3 16h7v5H3z"/></svg>
-      Dashboard
-    </button>
-    <button class="nav-item" onclick="showPanel('repos')">
-      <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M3 3h18v18H3zm4 4v10m5-10v10m5-10v10M7 7h10"/></svg>
-      Repozytoria
-    </button>
-    <button class="nav-item" onclick="showPanel('langs')">
-      <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M8 9l-4 3 4 3m8-6l4 3-4 3m-2-8l-2 10"/></svg>
-      Języki & Stack
-    </button>
-    <button class="nav-item" onclick="showPanel('ai')">
-      <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9 9l1.5 1.5L12 9l1.5 1.5L15 9m-6 6l1.5-1.5L12 15l1.5-1.5L15 15"/></svg>
-      AI Asystent
-    </button>
-    <div class="nav-label" style="margin-top:8px">Zasoby</div>
-    <button class="nav-item" onclick="openLink('https://github.com')">
-      <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 00-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0020 4.77 5.07 5.07 0 0019.91 1S18.73.65 16 2.48a13.38 13.38 0 00-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 005 4.77a5.44 5.44 0 00-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 009 18.13V22"/></svg>
-      GitHub
-    </button>
-    <button class="nav-item" onclick="openLink('https://developer.mozilla.org')">
-      <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
-      MDN Docs
-    </button>
-  </nav>
-  <div class="status">
-    <span class="status-dot"></span>
-    <span style="font-size:12px;color:var(--muted)">System online</span>
+</section>
+ 
+<main class="container">
+ 
+<!-- ═══ 11.1 ═══ -->
+<div class="sec" id="s11">
+  <div class="sec-head">
+    <span class="sec-num sn-green">11.1</span>
+    <h2>Budowa i rola układu hormonalnego</h2>
   </div>
-</aside>
-
-<!-- Main -->
-<div class="main">
-
-  <!-- Topbar -->
-  <div class="topbar">
-    <div>
-      <div class="topbar-title" id="panel-title">Dashboard</div>
-      <div class="topbar-meta" id="panel-meta">ostatnia aktualizacja: właśnie teraz</div>
+  <div class="sec-body">
+    <p class="body-text">Układ hormonalny to jeden z dwóch głównych systemów regulujących pracę organizmu (obok układu nerwowego). Działa za pomocą <strong>hormonów</strong> — substancji chemicznych produkowanych przez wyspecjalizowane komórki i gruczoły, które są wydzielane bezpośrednio do krwi i przenoszone do odległych narządów docelowych.</p>
+ 
+    <h3 class="sub">Układ hormonalny vs. układ nerwowy</h3>
+    <div class="vs-grid">
+      <div class="vs-card" style="border-top:3px solid var(--blue);">
+        <h4 style="color:var(--blue);">⚡ Układ nerwowy</h4>
+        <ul>
+          <li>Działa przez impulsy elektryczne</li>
+          <li>Prędkość: milisekundy</li>
+          <li>Efekty krótkotrwałe</li>
+          <li>Precyzyjny, punktowy</li>
+          <li>Przewodzi po nerwach</li>
+        </ul>
+      </div>
+      <div class="vs-divider">VS</div>
+      <div class="vs-card" style="border-top:3px solid var(--green);">
+        <h4 style="color:var(--green);">🌿 Układ hormonalny</h4>
+        <ul>
+          <li>Działa przez hormony we krwi</li>
+          <li>Prędkość: minuty do godzin</li>
+          <li>Efekty długotrwałe</li>
+          <li>Ogólnoustrojowy, rozległy</li>
+          <li>Transportuje przez krew</li>
+        </ul>
+      </div>
     </div>
-    <div class="token-form">
-      <input class="token-input" id="gh-token" type="password" placeholder="GitHub Personal Access Token (opcjonalne)">
-      <button class="btn" onclick="loadGitHub()">Załaduj dane GitHub</button><button class="btn" onclick="setupGemini()">Gemini API</button>
+ 
+    <div class="info green">
+      <strong>Zapamiętaj:</strong> Układ hormonalny jest wolniejszy od nerwowego, ale jego działanie trwa znacznie dłużej i obejmuje cały organizm jednocześnie.
     </div>
+ 
+    <h3 class="sub">Najważniejsze gruczoły dokrewne i ich hormony</h3>
+    <div class="gland-grid">
+      <div class="gland-card"><div class="g-dot" style="background:var(--green)"></div><div class="g-name">Przysadka mózgowa</div><div class="g-hormone">m.in. TSH, GH, ADH</div><div class="g-role">„Dyrektor" układu — steruje innymi gruczołami</div></div>
+      <div class="gland-card"><div class="g-dot" style="background:var(--teal)"></div><div class="g-name">Tarczyca</div><div class="g-hormone">tyroksyna (T4), T3</div><div class="g-role">Reguluje przemianę materii i wzrost</div></div>
+      <div class="gland-card"><div class="g-dot" style="background:var(--teal)"></div><div class="g-name">Przytarczyce</div><div class="g-hormone">parathormon (PTH)</div><div class="g-role">Reguluje poziom wapnia we krwi</div></div>
+      <div class="gland-card"><div class="g-dot" style="background:var(--amber)"></div><div class="g-name">Nadnercza</div><div class="g-hormone">adrenalina, kortyzol</div><div class="g-role">Reakcja na stres, gospodarka wodno-solna</div></div>
+      <div class="gland-card"><div class="g-dot" style="background:var(--amber)"></div><div class="g-name">Trzustka</div><div class="g-hormone">insulina, glukagon</div><div class="g-role">Reguluje poziom cukru we krwi</div></div>
+      <div class="gland-card"><div class="g-dot" style="background:var(--purple)"></div><div class="g-name">Szyszynka</div><div class="g-hormone">melatonina</div><div class="g-role">Reguluje rytm dobowy, sen</div></div>
+      <div class="gland-card"><div class="g-dot" style="background:var(--red)"></div><div class="g-name">Jajniki</div><div class="g-hormone">estrogen, progesteron</div><div class="g-role">Żeńskie hormony płciowe</div></div>
+      <div class="gland-card"><div class="g-dot" style="background:var(--red)"></div><div class="g-name">Jądra</div><div class="g-hormone">testosteron</div><div class="g-role">Męskie hormony płciowe</div></div>
+    </div>
+ 
+    <h3 class="sub">Tabela wybranych hormonów</h3>
+    <table class="hormone-table">
+      <thead><tr><th>Hormon</th><th>Gruczoł</th><th>Główne działanie</th></tr></thead>
+      <tbody>
+        <tr><td class="hn">Tyroksyna (T4)</td><td class="hg">Tarczyca</td><td>Przyspiesza metabolizm, wpływa na wzrost i dojrzewanie</td></tr>
+        <tr><td class="hn">TSH</td><td class="hg">Przysadka</td><td>Pobudza tarczycę do produkcji hormonów</td></tr>
+        <tr><td class="hn">Adrenalina</td><td class="hg">Nadnercza</td><td>Mobilizacja organizmu — „walcz albo uciekaj"</td></tr>
+        <tr><td class="hn">Insulina</td><td class="hg">Trzustka</td><td>Obniża poziom glukozy we krwi</td></tr>
+        <tr><td class="hn">Glukagon</td><td class="hg">Trzustka</td><td>Podwyższa poziom glukozy we krwi</td></tr>
+        <tr><td class="hn">Melatonina</td><td class="hg">Szyszynka</td><td>Reguluje sen i rytm dobowy</td></tr>
+        <tr><td class="hn">Estrogen</td><td class="hg">Jajniki</td><td>Żeńskie cechy płciowe, cykl menstruacyjny</td></tr>
+        <tr><td class="hn">Testosteron</td><td class="hg">Jądra</td><td>Męskie cechy płciowe, masa mięśniowa</td></tr>
+      </tbody>
+    </table>
   </div>
-
-  <!-- DASHBOARD PANEL -->
-  <div id="panel-dashboard" class="panel active">
-    <div class="hint">
-      💡 <strong>Wskazówka:</strong> Wpisz token GitHub powyżej, aby załadować <strong>prawdziwe dane</strong> ze swoich repozytoriów. Token tworzysz w <a href="https://github.com/settings/tokens" target="_blank">github.com/settings/tokens</a> — wybierz <code style="font-family:var(--mono);font-size:11px">public_repo</code>. Poniżej prezentowane są dane przykładowe.
-    </div>
-
-    <div class="metrics" id="metrics-grid">
-      <div class="metric-card">
-        <div class="metric-label">⭐ Łączne Stars</div>
-        <div class="metric-value accent" id="stat-stars">847</div>
-        <div class="metric-sub green"><span id="stars-change">Ładowanie gwiazdek...</span></div>
-      </div>
-      <div class="metric-card">
-        <div class="metric-label">📁 Repozytoria</div>
-        <div class="metric-value" id="stat-repos">32</div>
-        <div class="metric-sub">w tym 8 prywatnych</div>
-      </div>
-      <div class="metric-card">
-        <div class="metric-label">🔁 Commity (30d)</div>
-        <div class="metric-value green" id="stat-commits">214</div>
-        <div class="metric-sub green"><span id="commits-change">↑ +18% vs poprzedni miesiąc</span></div>
-      </div>
-      <div class="metric-card">
-        <div class="metric-label">👥 Obserwujący</div>
-        <div class="metric-value purple" id="stat-followers">156</div>
-        <div class="metric-sub green"><span id="followers-change">↑ +12 w tym miesiącu</span></div>
-      </div>
-    </div>
-
-    <div class="grid2">
-      <div class="card">
-        <div class="card-title">Aktywność commitów — ostatnie 30 dni</div>
-        <div class="commit-chart" id="commit-chart"></div>
-        <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-top:6px;font-family:var(--mono)">
-          <span id="date-from">1 maj</span><span id="date-to">dziś</span>
-        </div>
-      </div>
-      <div class="card">
-        <div class="card-title">Siatka kontrybucji (ostatnie 16 tygodni)</div>
-        <div class="heatmap" id="heatmap"></div>
-        <div class="hm-labels"><span>16 tyg. temu</span><span>dziś</span></div>
-        <div style="display:flex;align-items:center;gap:6px;margin-top:8px;font-size:11px;color:var(--muted)">
-          Mniej
-          <span style="display:inline-flex;gap:2px">
-            <span style="width:10px;height:10px;border-radius:2px;background:var(--bg3);display:inline-block"></span>
-            <span style="width:10px;height:10px;border-radius:2px;background:#0e4429;display:inline-block"></span>
-            <span style="width:10px;height:10px;border-radius:2px;background:#006d32;display:inline-block"></span>
-            <span style="width:10px;height:10px;border-radius:2px;background:#26a641;display:inline-block"></span>
-            <span style="width:10px;height:10px;border-radius:2px;background:#39d353;display:inline-block"></span>
-          </span>
-          Więcej
-        </div>
-      </div>
-    </div>
-
-    <div class="grid2">
-      <div class="card">
-        <div class="card-title">Ostatnia aktywność</div>
-        <div id="activity-feed">
-          <div class="feed-item"><div class="feed-icon" style="background:rgba(63,185,80,.1)">🔀</div><div class="feed-text"><div class="feed-main">Scalono PR #241 — <strong>refactor: auth middleware</strong></div><div class="feed-time">2 min temu · main</div></div></div>
-          <div class="feed-item"><div class="feed-icon" style="background:rgba(88,166,255,.1)">✅</div><div class="feed-text"><div class="feed-main">Build passed — <code style="font-family:var(--mono);font-size:11px">v2.4.1-rc</code></div><div class="feed-time">8 min temu · CI/CD</div></div></div>
-          <div class="feed-item"><div class="feed-icon" style="background:rgba(210,153,34,.1)">🐛</div><div class="feed-text"><div class="feed-main">Issue #89 — Memory leak w <code style="font-family:var(--mono);font-size:11px">useEffect</code></div><div class="feed-time">23 min temu · api-dashboard</div></div></div>
-          <div class="feed-item"><div class="feed-icon" style="background:rgba(188,140,255,.1)">🌿</div><div class="feed-text"><div class="feed-main">Nowa gałąź: <code style="font-family:var(--mono);font-size:11px">feature/dark-mode</code></div><div class="feed-time">1 godz. temu · portfolio</div></div></div>
-          <div class="feed-item"><div class="feed-icon" style="background:rgba(248,81,73,.1)">🔖</div><div class="feed-text"><div class="feed-main">Release <strong>v2.3.0</strong> opublikowany</div><div class="feed-time">3 godz. temu · api-dashboard</div></div></div>
-        </div>
-      </div>
-      <div class="card">
-        <div class="card-title">Top repozytoria (Stars)</div>
-        <div id="top-repos">
-          <div style="margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--border)">
-            <div style="display:flex;justify-content:space-between;align-items:center">
-              <span style="color:var(--accent);font-weight:600">api-dashboard</span>
-              <span style="color:var(--amber);font-size:12px">⭐ 312</span>
-            </div>
-            <div style="font-size:12px;color:var(--muted);margin-top:4px">REST API monitoring tool — TypeScript, React</div>
-          </div>
-          <div style="margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--border)">
-            <div style="display:flex;justify-content:space-between;align-items:center">
-              <span style="color:var(--accent);font-weight:600">devspace-cli</span>
-              <span style="color:var(--amber);font-size:12px">⭐ 248</span>
-            </div>
-            <div style="font-size:12px;color:var(--muted);margin-top:4px">Narzędzie CLI dla deweloperów — Go, Bash</div>
-          </div>
-          <div style="margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--border)">
-            <div style="display:flex;justify-content:space-between;align-items:center">
-              <span style="color:var(--accent);font-weight:600">ml-experiments</span>
-              <span style="color:var(--amber);font-size:12px">⭐ 187</span>
-            </div>
-            <div style="font-size:12px;color:var(--muted);margin-top:4px">Eksperymenty z ML — Python, Jupyter</div>
-          </div>
-          <div>
-            <div style="display:flex;justify-content:space-between;align-items:center">
-              <span style="color:var(--accent);font-weight:600">portfolio</span>
-              <span style="color:var(--amber);font-size:12px">⭐ 100</span>
-            </div>
-            <div style="font-size:12px;color:var(--muted);margin-top:4px">Strona osobista — Next.js, TailwindCSS</div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- REPOS PANEL -->
-  <div id="panel-repos" class="panel">
-    <div style="display:flex;gap:8px;margin-bottom:16px">
-      <input class="token-input" id="repo-search" placeholder="Szukaj repozytoriów..." oninput="filterRepos()" style="width:240px">
-      <select id="repo-lang" onchange="filterRepos()" style="background:var(--bg2);border:1px solid var(--border);color:var(--text);padding:6px 10px;border-radius:6px;font-size:12px">
-        <option value="">Wszystkie języki</option>
-        <option value="TypeScript">TypeScript</option>
-        <option value="Python">Python</option>
-        <option value="Go">Go</option>
-        <option value="JavaScript">JavaScript</option>
-      </select>
-    </div>
-    <div class="card" id="repos-list">
-      <!-- dynamically filled -->
-    </div>
-  </div>
-
-  <!-- LANGS PANEL -->
-  <div id="panel-langs" class="panel">
-    <div class="grid2">
-      <div class="card">
-        <div class="card-title">Użycie języków</div>
-        <div id="lang-bars"></div>
-      </div>
-      <div class="card">
-        <div class="card-title">Stack technologiczny</div>
-        <div style="font-size:12px;color:var(--muted);margin-bottom:10px">Frontend</div>
-        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px">
-          <span class="badge badge-accent">React</span><span class="badge badge-accent">TypeScript</span><span class="badge badge-accent">Next.js</span><span class="badge badge-accent">TailwindCSS</span><span class="badge badge-accent">Vite</span>
-        </div>
-        <div style="font-size:12px;color:var(--muted);margin-bottom:10px">Backend</div>
-        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px">
-          <span class="badge badge-green">Node.js</span><span class="badge badge-green">FastAPI</span><span class="badge badge-green">PostgreSQL</span><span class="badge badge-green">Redis</span><span class="badge badge-green">Go</span>
-        </div>
-        <div style="font-size:12px;color:var(--muted);margin-bottom:10px">DevOps & Narzędzia</div>
-        <div style="display:flex;flex-wrap:wrap;gap:6px">
-          <span class="badge badge-amber">Docker</span><span class="badge badge-amber">GitHub Actions</span><span class="badge badge-amber">Terraform</span><span class="badge badge-amber">AWS</span><span class="badge badge-amber">Grafana</span>
-        </div>
-      </div>
-    </div>
-    <div class="card">
-      <div class="card-title">Poziom zaawansowania</div>
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px">
-        <div>
-          <div style="font-size:12px;color:var(--muted);margin-bottom:8px">💪 Biegły (3+ lat)</div>
-          <div style="display:flex;flex-direction:column;gap:4px">
-            <span class="badge badge-green" style="display:inline-block;width:fit-content">JavaScript/TypeScript</span>
-            <span class="badge badge-green" style="display:inline-block;width:fit-content">Python</span>
-            <span class="badge badge-green" style="display:inline-block;width:fit-content">React</span>
-            <span class="badge badge-green" style="display:inline-block;width:fit-content">SQL / PostgreSQL</span>
-          </div>
-        </div>
-        <div>
-          <div style="font-size:12px;color:var(--muted);margin-bottom:8px">📈 Zaawansowany (1-3 lat)</div>
-          <div style="display:flex;flex-direction:column;gap:4px">
-            <span class="badge badge-accent" style="display:inline-block;width:fit-content">Go</span>
-            <span class="badge badge-accent" style="display:inline-block;width:fit-content">Docker / Kubernetes</span>
-            <span class="badge badge-accent" style="display:inline-block;width:fit-content">AWS</span>
-            <span class="badge badge-accent" style="display:inline-block;width:fit-content">Next.js</span>
-          </div>
-        </div>
-        <div>
-          <div style="font-size:12px;color:var(--muted);margin-bottom:8px">🌱 Uczę się</div>
-          <div style="display:flex;flex-direction:column;gap:4px">
-            <span class="badge badge-amber" style="display:inline-block;width:fit-content">Rust</span>
-            <span class="badge badge-amber" style="display:inline-block;width:fit-content">Machine Learning</span>
-            <span class="badge badge-amber" style="display:inline-block;width:fit-content">WebAssembly</span>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- AI PANEL -->
-  <div id="panel-ai" class="panel" style="padding-bottom:0">
-    <div class="ai-layout">
-      <div class="ai-chips">
-        <button class="chip" onclick="aiAsk('Jak naprawić wyciek pamięci w React useEffect?')">wyciek pamięci useEffect</button>
-        <button class="chip" onclick="aiAsk('Wyjaśnij różnicę między async/await a Promise w JavaScript')">async/await vs Promise</button>
-        <button class="chip" onclick="aiAsk('Jak zoptymalizować wolne zapytania SQL?')">wolne zapytania SQL</button>
-        <button class="chip" onclick="aiAsk('Jakie są najlepsze praktyki TypeScript w 2024?')">TypeScript best practices</button>
-        <button class="chip" onclick="aiAsk('Wyjaśnij działanie Docker i kiedy go używać')">Docker — kiedy używać?</button>
-        <button class="chip" onclick="aiAsk('Jak działa garbage collection w JavaScript?')">garbage collection JS</button>
-      </div>
-      <div class="ai-messages" id="ai-messages">
-        <div class="ai-msg">
-          <div class="ai-avatar bot">AI</div>
-          <div class="ai-bubble">
-            Cześć! Jestem asystentem dla programistów. Mogę pomóc z:<br><br>
-            🐛 <strong>Debugowaniem</strong> — wklej kod z błędem<br>
-            📐 <strong>Architekturą</strong> — omówimy wzorce, projekty<br>
-            🔤 <strong>Językami</strong> — Python, JS/TS, Go, Rust i inne<br>
-            ⚡ <strong>Optymalizacją</strong> — wydajność, SQL, algorytmy<br><br>
-            O co pytasz?
-          </div>
-        </div>
-      </div>
-      <div class="ai-msg typing-indicator" id="typing-ind">
-        <div class="ai-avatar bot">AI</div>
-        <div class="ai-bubble"><div class="typing-dots"><span></span><span></span><span></span></div></div>
-      </div>
-      <div class="ai-input-row">
-        <textarea class="ai-input" id="ai-input" rows="2" placeholder="Zadaj pytanie o kod, błędy, architekturę..." onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();aiSend()}"></textarea>
-        <button class="btn btn-primary" onclick="aiSend()" style="align-self:flex-end">Wyślij</button>
-      </div>
-    </div>
-  </div>
-
 </div>
-</div>
-
-<script>
-// ── Navigation ──────────────────────────────────────────────────────────────
-const titles = {dashboard:'Dashboard', repos:'Repozytoria', langs:'Języki & Stack', ai:'AI Asystent'};
-function showPanel(id) {
-  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
-  document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
-  document.getElementById('panel-'+id).classList.add('active');
-  document.querySelectorAll('.nav-item')[['dashboard','repos','langs','ai'].indexOf(id)].classList.add('active');
-  document.getElementById('panel-title').textContent = titles[id];
-}
-
-function openLink(url) { window.open(url,'_blank'); }
-
-// ── Heatmap ─────────────────────────────────────────────────────────────────
-function buildHeatmap() {
-  const c = document.getElementById('heatmap');
-  if(!c) return;
-  for(let w=0;w<16;w++) {
-    const col = document.createElement('div');
-    col.className = 'heatmap-col';
-    for(let d=0;d<7;d++) {
-      const cell = document.createElement('div');
-      const r = Math.random();
-      const lvl = r<.35?0:r<.55?1:r<.72?2:r<.87?3:4;
-      cell.className = `hm-cell hm-${lvl}`;
-      col.appendChild(cell);
-    }
-    c.appendChild(col);
-  }
-}
-
-// ── Commit chart ─────────────────────────────────────────────────────────────
-function buildCommitChart() {
-  const c = document.getElementById('commit-chart');
-  if(!c) return;
-  const data = Array.from({length:30},()=>Math.floor(Math.random()*10)+1);
-  const max = Math.max(...data);
-  data.forEach(v=>{
-    const b = document.createElement('div');
-    b.className = 'commit-bar';
-    b.style.height = Math.round((v/max)*100)+'%';
-    b.title = v+' commitów';
-    c.appendChild(b);
-  });
-  const now = new Date();
-  const from = new Date(); from.setDate(now.getDate()-29);
-  document.getElementById('date-from').textContent = from.getDate()+'.'+(from.getMonth()+1);
-  document.getElementById('date-to').textContent = 'dziś';
-}
-
-// ── Language bars ────────────────────────────────────────────────────────────
-const langs = [
-  {name:'TypeScript', pct:38, color:'#3178c6'},
-  {name:'Python',     pct:24, color:'#3572a5'},
-  {name:'Go',         pct:16, color:'#00add8'},
-  {name:'JavaScript', pct:12, color:'#f1e05a'},
-  {name:'CSS',        pct:6,  color:'#563d7c'},
-  {name:'Inne',       pct:4,  color:'#555'},
-];
-function buildLangBars() {
-  const c = document.getElementById('lang-bars');
-  if(!c) return;
-  langs.forEach(l=>{
-    c.innerHTML += `
-      <div class="lang-row"><span class="lang-name">${l.name}</span><span class="lang-pct">${l.pct}%</span></div>
-      <div class="lang-bar-track"><div class="lang-bar-fill" style="width:${l.pct}%;background:${l.color}"></div></div>
-    `;
-  });
-}
-
-// ── Sample repos ─────────────────────────────────────────────────────────────
-const sampleRepos = [
-  {name:'api-dashboard', desc:'Narzędzie do monitorowania REST API w czasie rzeczywistym', lang:'TypeScript', stars:312, forks:48, updated:'2 godz. temu', topics:['react','typescript','api']},
-  {name:'devspace-cli',  desc:'Zestaw narzędzi CLI usprawniających codzienną pracę dewelopera', lang:'Go', stars:248, forks:31, updated:'wczoraj', topics:['cli','go','developer-tools']},
-  {name:'ml-experiments',desc:'Eksperymenty i notebooki z uczenia maszynowego', lang:'Python', stars:187, forks:22, updated:'3 dni temu', topics:['python','machine-learning','jupyter']},
-  {name:'portfolio',     desc:'Strona osobista i portfolio zbudowane w Next.js', lang:'JavaScript', stars:100, forks:15, updated:'tydzień temu', topics:['nextjs','tailwind','portfolio']},
-  {name:'db-migrations', desc:'Narzędzie do zarządzania migracjami bazy danych', lang:'Python', stars:74, forks:9, updated:'2 tygodnie temu', topics:['python','postgresql','migrations']},
-  {name:'auth-service',  desc:'Mikroserwis autoryzacyjny JWT + OAuth2', lang:'TypeScript', stars:58, forks:7, updated:'miesiąc temu', topics:['typescript','auth','microservice']},
-];
-
-let currentRepos = sampleRepos;
-
-function renderRepos(repos) {
-  const c = document.getElementById('repos-list');
-  if(!repos.length){ c.innerHTML='<div style="color:var(--muted);padding:20px;text-align:center">Brak repozytoriów</div>'; return; }
-  c.innerHTML = repos.map(r=>`
-    <div class="repo-item" data-lang="${r.lang}">
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
-        <span class="repo-name">${r.name}</span>
-        <span class="badge badge-accent" style="font-size:10px">${r.lang}</span>
-      </div>
-      <div class="repo-desc">${r.desc}</div>
-      <div class="repo-meta">
-        <span>⭐ ${r.stars}</span>
-        <span>🍴 ${r.forks}</span>
-        <span>🕐 ${r.updated}</span>
-      </div>
-      <div style="margin-top:8px;display:flex;gap:6px">${r.topics.map(t=>`<span class="repo-tag">${t}</span>`).join('')}</div>
+ 
+<!-- ═══ 11.2 ═══ -->
+<div class="sec" id="s12">
+  <div class="sec-head">
+    <span class="sec-num sn-teal">11.2</span>
+    <h2>Regulacja wydzielania hormonów</h2>
+  </div>
+  <div class="sec-body">
+    <p class="body-text">Poziom hormonów we krwi musi być precyzyjnie kontrolowany. Zbyt dużo lub za mało hormonu zaburza <strong>homeostazę</strong> — stan równowagi wewnętrznej organizmu. Główną rolę w tej regulacji pełnią <strong>podwzgórze</strong> i <strong>przysadka mózgowa</strong>.</p>
+ 
+    <div class="info teal">
+      <strong>Homeostaza</strong> to zdolność organizmu do utrzymywania stałych warunków wewnętrznych (temperatura, poziom glukozy, poziom hormonów), niezależnie od zmian w otoczeniu.
     </div>
-  `).join('');
-}
-
-function filterRepos() {
-  const q = document.getElementById('repo-search').value.toLowerCase();
-  const l = document.getElementById('repo-lang').value;
-  const filtered = currentRepos.filter(r=>
-    (!q || r.name.toLowerCase().includes(q) || r.desc.toLowerCase().includes(q)) &&
-    (!l || r.lang === l)
-  );
-  renderRepos(filtered);
-}
-
-
-async function loadLanguages(repos, headers){
-  const totals = {};
-  for(const repo of repos.slice(0,20)){
-    try{
-      const res = await fetch(repo.languages_url,{headers});
-      const data = await res.json();
-      Object.entries(data).forEach(([k,v])=>{
-        totals[k]=(totals[k]||0)+v;
-      });
-    }catch(e){}
-  }
-  const sum = Object.values(totals).reduce((a,b)=>a+b,0) || 1;
-  const box = document.getElementById('lang-bars');
-  box.innerHTML='';
-  Object.entries(totals)
-    .sort((a,b)=>b[1]-a[1])
-    .slice(0,8)
-    .forEach(([name,val])=>{
-      const pct=((val/sum)*100).toFixed(1);
-      box.innerHTML += `<div class="lang-row"><span class="lang-name">${name}</span><span class="lang-pct">${pct}%</span></div><div class="lang-bar-track"><div class="lang-bar-fill" style="width:${pct}%;background:var(--accent)"></div></div>`;
-    });
-}
-
-async function loadActivity(headers){
-  try{
-    const res = await fetch('https://api.github.com/user/events?per_page=20',{headers});
-    const events = await res.json();
-    const feed = document.getElementById('activity-feed');
-    feed.innerHTML = events.slice(0,10).map(e=>`
-      <div class="feed-item">
-        <div class="feed-icon" style="background:rgba(88,166,255,.1)">⚡</div>
-        <div class="feed-text">
-          <div class="feed-main">${e.type} — ${e.repo?.name || ''}</div>
-          <div class="feed-time">${new Date(e.created_at).toLocaleString('pl-PL')}</div>
-        </div>
-      </div>`).join('');
-  }catch(e){}
-}
-
-
-async function githubGraphQL(token, query, variables={}){
-  const res = await fetch('https://api.github.com/graphql',{
-    method:'POST',
-    headers:{
-      'Authorization':'Bearer '+token,
-      'Content-Type':'application/json'
-    },
-    body:JSON.stringify({query,variables})
-  });
-  const data = await res.json();
-  if(data.errors) throw new Error(data.errors[0].message);
-  return data.data;
-}
-
-function renderRealHeatmap(weeks){
-  const c=document.getElementById('heatmap');
-  if(!c) return;
-  c.innerHTML='';
-  weeks.forEach(w=>{
-    const col=document.createElement('div');
-    col.className='heatmap-col';
-    w.contributionDays.forEach(day=>{
-      const cell=document.createElement('div');
-      const n=day.contributionCount;
-      const lvl=n===0?0:n<2?1:n<5?2:n<10?3:4;
-      cell.className='hm-cell hm-'+lvl;
-      cell.title=day.date+' : '+n+' contributions';
-      col.appendChild(cell);
-    });
-    c.appendChild(col);
-  });
-}
-
-// ── GitHub API ────────────────────────────────────────────────────────────────
-async function loadGitHub() {
-  const token = document.getElementById('gh-token').value.trim();
-  if(!token){ alert('Wpisz token GitHub aby załadować dane.'); return; }
-  const headers = {Authorization:`Bearer ${token}`, Accept:'application/vnd.github+json'};
-  try {
-    const [user, repos] = await Promise.all([
-      fetch('https://api.github.com/user',{headers}).then(r=>r.json()),
-      fetch('https://api.github.com/user/repos?per_page=100&sort=updated',{headers}).then(r=>r.json())
-    ]);
-    if(user.message){ alert('Błędny token: '+user.message); return; }
-
-    document.getElementById('stat-stars').textContent = repos.reduce((s,r)=>s+r.stargazers_count,0);
-    document.getElementById('stat-repos').textContent = user.public_repos;
-    document.getElementById('stat-followers').textContent = user.followers;
-
-    currentRepos = repos.map(r=>({
-      name: r.name,
-      desc: r.description || 'Brak opisu',
-      lang: r.language || '—',
-      stars: r.stargazers_count,
-      forks: r.forks_count,
-      updated: new Date(r.updated_at).toLocaleDateString('pl'),
-      topics: r.topics||[]
-    }));
-    renderRepos(currentRepos);
-    
-    await loadLanguages(repos, headers);
-    await loadActivity(headers);
-
-try{
-  const starsEl = document.getElementById('stars-change');
-  const reposList = Array.isArray(repos) ? repos : [];
-  const totalStars = reposList.reduce((s,r)=>s + (r.stargazers_count || 0), 0);
-  if(starsEl){
-    starsEl.textContent = totalStars + ' łącznych gwiazdek';
-  }
-}catch(e){ console.error(e); }
-
-
-    try{
-      const gql = await githubGraphQL(token, `
-      query {
-        viewer {
-          followers { totalCount }
-          contributionsCollection {
-            contributionCalendar {
-              totalContributions
-              weeks {
-                contributionDays {
-                  contributionCount
-                  date
-                }
-              }
-            }
-          }
-        }
-      }`);
-
-      const coll = gql.viewer.contributionsCollection;
-      const cal = coll.contributionCalendar;
-      renderRealHeatmap(cal.weeks);
-
-      const stat = document.getElementById('stat-commits');
-      if(stat) stat.textContent = cal.totalContributions;
-
-      const days = cal.weeks.flatMap(w=>w.contributionDays);
-      const now30 = days.slice(-30).reduce((a,d)=>a+d.contributionCount,0);
-      const prev30 = days.slice(-60,-30).reduce((a,d)=>a+d.contributionCount,0);
-
-      if(stat) stat.textContent = now30;
-
-      const pct = prev30>0 ? (((now30-prev30)/prev30)*100).toFixed(1) : 100;
-      const cc = document.getElementById('commits-change');
-      if(cc) cc.textContent = `${pct>=0?'↑':'↓'} ${pct}% vs poprzednie 30 dni`;
-
-      const fc = document.getElementById('followers-change');
-      if(fc){
-         fc.textContent = `${gql.viewer.followers.totalCount} obserwujących`;
-      }
-    }catch(err){
-      console.error('GraphQL',err);
-    }
-
-
-    const topR = [...currentRepos].sort((a,b)=>b.stars-a.stars).slice(0,4);
-    document.getElementById('top-repos').innerHTML = topR.map(r=>`
-      <div style="margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--border)">
-        <div style="display:flex;justify-content:space-between;align-items:center">
-          <span style="color:var(--accent);font-weight:600">${r.name}</span>
-          <span style="color:var(--amber);font-size:12px">⭐ ${r.stars}</span>
-        </div>
-        <div style="font-size:12px;color:var(--muted);margin-top:4px">${r.desc}</div>
+ 
+    <h3 class="sub">Ujemne sprzężenie zwrotne — zasada działania</h3>
+    <p class="body-text">Najważniejszym mechanizmem regulacji hormonalnej jest <strong>ujemne sprzężenie zwrotne</strong> (ang. negative feedback). Polega ono na tym, że produkt procesu (hormon) hamuje sam siebie — gdy jego stężenie wzrośnie powyżej normy, uruchamia sygnał do zmniejszenia jego produkcji.</p>
+ 
+    <div class="flow">
+      <div class="flow-row">
+        <div class="flow-box trigger">📉 Mało hormonów tarczycy</div>
+        <div class="flow-arr">→</div>
+        <div class="flow-box" style="border-color:var(--teal);color:#7de0d9;">Przysadka wykrywa niedobór</div>
+        <div class="flow-arr">→</div>
+        <div class="flow-box result">📈 Wydziela więcej TSH</div>
+        <div class="flow-arr">→</div>
+        <div class="flow-box result">Tarczyca produkuje więcej hormonów</div>
       </div>
-    `).join('');
-
-    alert('✅ Dane GitHub załadowane pomyślnie dla @'+user.login+'!');
-  } catch(e) {
-    alert('Błąd połączenia: '+e.message);
-  }
-}
-
-// ── AI Chat ───────────────────────────────────────────────────────────────────
-function aiAsk(q) { document.getElementById('ai-input').value=q; aiSend(); }
-
-
-
-// ── Init ──────────────────────────────────────────────────────────────────────
-buildHeatmap();
-buildCommitChart();
-buildLangBars();
-renderRepos(sampleRepos);
-</script>
-
+      <div class="flow-row">
+        <div class="flow-box trigger2">📈 Dużo hormonów tarczycy</div>
+        <div class="flow-arr">→</div>
+        <div class="flow-box" style="border-color:var(--teal);color:#7de0d9;">Przysadka wykrywa nadmiar</div>
+        <div class="flow-arr">→</div>
+        <div class="flow-box result2">📉 Wydziela mniej TSH</div>
+        <div class="flow-arr">→</div>
+        <div class="flow-box result2">Tarczyca zwalnia produkcję</div>
+      </div>
+    </div>
+ 
+    <div class="info green">
+      <strong>Analogia:</strong> Ujemne sprzężenie zwrotne działa jak termostat — gdy temperatura w pokoju wzrośnie powyżej ustawionej wartości, ogrzewanie się wyłącza. Gdy spadnie poniżej, włącza się ponownie.
+    </div>
+ 
+    <h3 class="sub">Oś podwzgórze – przysadka – gruczoł dokrewny</h3>
+    <p class="body-text">Regulacja hormonalna często przebiega w trzystopniowej osi:</p>
+    <div class="flow">
+      <div class="flow-row">
+        <div class="flow-box" style="border-color:var(--purple);color:#bba8f0;">🧠 Podwzgórze — wydziela hormony uwalniające</div>
+        <div class="flow-arr">↓</div>
+        <div class="flow-box" style="border-color:var(--teal);color:#7de0d9;">🫘 Przysadka — wydziela hormony tropowe (np. TSH)</div>
+        <div class="flow-arr">↓</div>
+        <div class="flow-box" style="border-color:var(--green);color:#9dd4ae;">🌿 Gruczoł dokrewny — wydziela właściwy hormon</div>
+      </div>
+    </div>
+  </div>
+</div>
+ 
+<!-- ═══ 11.3 ═══ -->
+<div class="sec" id="s13">
+  <div class="sec-head">
+    <span class="sec-num sn-amber">11.3a</span>
+    <h2>Nadczynność i niedoczynność tarczycy</h2>
+  </div>
+  <div class="sec-body">
+    <p class="body-text"><strong>Tarczyca</strong> to gruczoł w kształcie motyla, leżący z przodu szyi, tuż poniżej krtani. Produkuje hormony tarczycy (głównie tyroksyna — T4 i trijodotyronina — T3), które regulują tempo przemiany materii, wzrost, dojrzewanie układu nerwowego i pracę serca.</p>
+ 
+    <div class="info amber">
+      <strong>Jod a tarczyca:</strong> Do produkcji hormonów tarczycy niezbędny jest <strong>jod</strong>. Niedobór jodu w diecie może prowadzić do powiększenia tarczycy (wola), ponieważ narząd „stara się" wyprodukować więcej hormonów.
+    </div>
+ 
+    <h3 class="sub">Porównanie nadczynności i niedoczynności</h3>
+    <div class="two-col">
+      <div class="compare-card nad">
+        <h4>⬆ Nadczynność tarczycy</h4>
+        <p class="sub-note">Za <strong>dużo</strong> hormonów tarczycy → metabolizm przyspiesza</p>
+        <ul>
+          <li>Przyspieszona przemiana materii</li>
+          <li>Utrata masy ciała mimo dobrego apetytu</li>
+          <li>Nadmierna potliwość</li>
+          <li>Nerwowość, drażliwość, niepokój</li>
+          <li>Przyspieszone bicie serca (tachykardia)</li>
+          <li>Uczucie gorąca</li>
+          <li>Wytrzeszcz oczu (w chorobie Gravesa)</li>
+        </ul>
+      </div>
+      <div class="compare-card nie">
+        <h4>⬇ Niedoczynność tarczycy</h4>
+        <p class="sub-note">Za <strong>mało</strong> hormonów tarczycy → metabolizm zwalnia</p>
+        <ul>
+          <li>Spowolniona przemiana materii</li>
+          <li>Przyrost masy ciała</li>
+          <li>Senność, ospałość</li>
+          <li>Zmęczenie, osłabienie</li>
+          <li>Uczucie zimna</li>
+          <li>Sucha skóra, wypadanie włosów</li>
+          <li>Spowolnienie akcji serca</li>
+        </ul>
+      </div>
+    </div>
+ 
+    <h3 class="sub">Tabela porównawcza — poziom TSH</h3>
+    <div class="compare-wrap">
+    <table class="compare">
+      <thead>
+        <tr>
+          <th style="color:var(--muted2);">Parametr</th>
+          <th class="col-nad">Nadczynność</th>
+          <th class="col-nie">Niedoczynność</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td class="row-label">Poziom hormonów tarczycy</td><td class="col-nad">↑ za wysoki</td><td class="col-nie">↓ za niski</td></tr>
+        <tr><td class="row-label">Poziom TSH z przysadki</td><td class="col-nad">↓ niski (hamowanie)</td><td class="col-nie">↑ wysoki (stymulacja)</td></tr>
+        <tr><td class="row-label">Metabolizm</td><td class="col-nad">Przyspieszony</td><td class="col-nie">Zwolniony</td></tr>
+        <tr><td class="row-label">Masa ciała</td><td class="col-nad">Spada</td><td class="col-nie">Rośnie</td></tr>
+        <tr><td class="row-label">Tętno</td><td class="col-nad">Przyspieszone</td><td class="col-nie">Spowolnione</td></tr>
+        <tr><td class="row-label">Temperatura ciała</td><td class="col-nad">Podwyższona, gorąco</td><td class="col-nie">Obniżona, zimno</td></tr>
+      </tbody>
+    </table>
+    </div>
+ 
+    <div class="info blue">
+      <strong>Ciekawostka:</strong> Najczęstszą przyczyną nadczynności tarczycy jest <strong>choroba Gravesa-Basedowa</strong> — choroba autoimmunologiczna, w której układ odpornościowy atakuje własną tarczycę, wymuszając nadprodukcję hormonów.
+    </div>
+  </div>
+</div>
+ 
+<!-- ═══ STRES ═══ -->
+<div class="sec" id="s14">
+  <div class="sec-head">
+    <span class="sec-num sn-red">11.3b</span>
+    <h2>Stres i adrenalina</h2>
+  </div>
+  <div class="sec-body">
+    <p class="body-text"><strong>Stres</strong> to reakcja organizmu na sytuacje trudne, niebezpieczne lub wymagające nagłego działania. Choć stres kojarzy się negatywnie, krótkotrwały stres jest biologicznie uzasadniony — pomaga przeżyć zagrożenia.</p>
+ 
+    <h3 class="sub">Rola adrenaliny — hormon stresu</h3>
+    <p class="body-text">W obliczu stresu <strong>nadnercza</strong> (dokładniej — ich rdzeń) natychmiast wydzielają <strong>adrenalinę</strong> (epinefrynę). Cały efekt pojawia się w ciągu sekund, co czyni adrenalinę wyjątkiem wśród hormonów — działa prawie tak szybko jak układ nerwowy.</p>
+ 
+    <div class="stress-grid">
+      <div class="stress-tile"><div class="st-icon">🫀</div><div class="st-text"><strong>Przyspiesza pracę serca</strong> — więcej krwi do mięśni</div></div>
+      <div class="stress-tile"><div class="st-icon">📈</div><div class="st-text"><strong>Zwiększa ciśnienie krwi</strong> — lepsza perfuzja narządów</div></div>
+      <div class="stress-tile"><div class="st-icon">⚡</div><div class="st-text"><strong>Podnosi poziom glukozy</strong> — natychmiastowe źródło energii</div></div>
+      <div class="stress-tile"><div class="st-icon">🫁</div><div class="st-text"><strong>Rozszerza oskrzela</strong> — więcej tlenu</div></div>
+      <div class="stress-tile"><div class="st-icon">👁️</div><div class="st-text"><strong>Rozszerza źrenice</strong> — lepsze widzenie</div></div>
+      <div class="stress-tile"><div class="st-icon">🏃</div><div class="st-text"><strong>Mobilizuje mięśnie</strong> — reakcja walcz albo uciekaj</div></div>
+    </div>
+ 
+    <h3 class="sub">Krótkotrwały vs. długotrwały stres</h3>
+    <div class="two-col">
+      <div class="compare-card" style="border-top-color:var(--green);">
+        <h4 style="color:var(--green);">✅ Stres krótkotrwały</h4>
+        <p class="sub-note">Mobilizuje i pomaga</p>
+        <ul>
+          <li>Zwiększa koncentrację</li>
+          <li>Poprawia refleks</li>
+          <li>Mobilizuje energię</li>
+          <li>Może ratować życie</li>
+        </ul>
+      </div>
+      <div class="compare-card" style="border-top-color:var(--red);">
+        <h4 style="color:var(--red);">⚠️ Stres przewlekły (długotrwały)</h4>
+        <p class="sub-note">Niszczy zdrowie</p>
+        <ul>
+          <li>Osłabia układ odpornościowy</li>
+          <li>Uszkadza serce i naczynia</li>
+          <li>Zaburza sen</li>
+          <li>Może powodować depresję</li>
+        </ul>
+      </div>
+    </div>
+ 
+    <div class="info red">
+      <strong>Kortyzol — hormon długotrwałego stresu:</strong> Przy chronicznym stresie nadnercza wydzielają też <strong>kortyzol</strong>. Długotrwale podwyższony kortyzol osłabia odporność, sprzyja odkładaniu tłuszczu i zaburza pracę mózgu.
+    </div>
+  </div>
+</div>
+ 
+<!-- ═══ SŁOWNIK ═══ -->
+<div class="sec">
+  <div class="sec-head">
+    <span class="sec-num sn-purple">📖</span>
+    <h2>Kluczowe pojęcia</h2>
+  </div>
+  <div class="sec-body">
+    <p class="body-text" style="margin-bottom:1rem;">Najedź na pojęcie, żeby je zaznaczyć. Naucz się wszystkich przed sprawdzianem!</p>
+    <div class="kw-grid">
+      <span class="kw">hormon</span>
+      <span class="kw">gruczoł dokrewny</span>
+      <span class="kw">homeostaza</span>
+      <span class="kw">podwzgórze</span>
+      <span class="kw">przysadka mózgowa</span>
+      <span class="kw">ujemne sprzężenie zwrotne</span>
+      <span class="kw">tarczyca</span>
+      <span class="kw">TSH</span>
+      <span class="kw">tyroksyna</span>
+      <span class="kw">nadczynność tarczycy</span>
+      <span class="kw">niedoczynność tarczycy</span>
+      <span class="kw">nadnercza</span>
+      <span class="kw">adrenalina</span>
+      <span class="kw">kortyzol</span>
+      <span class="kw">stres</span>
+      <span class="kw">metabolizm</span>
+      <span class="kw">insulina</span>
+      <span class="kw">glukagon</span>
+      <span class="kw">melatonina</span>
+    </div>
+  </div>
+</div>
+ 
+<!-- ═══ QUIZ ═══ -->
+<div class="quiz-sec" id="quiz">
+  <div class="quiz-head">
+    <span class="sec-num sn-green">🧠</span>
+    <h2>Quiz — sprawdź swoją wiedzę</h2>
+  </div>
+  <div class="quiz-body">
+    <div class="progress-bar"><div class="progress-fill" id="qprog" style="width:0%"></div></div>
+    <div id="qqs">
+ 
+      <div class="q-wrap active" data-i="0">
+        <p>1. Jaką drogą hormony są transportowane do narządów docelowych?</p>
+        <div class="q-opts">
+          <button class="q-btn" onclick="ans(this,false)">Przez nerwy</button>
+          <button class="q-btn" onclick="ans(this,true)">Przez krew</button>
+          <button class="q-btn" onclick="ans(this,false)">Przez limfę</button>
+          <button class="q-btn" onclick="ans(this,false)">Przez płyn tkankowy</button>
+        </div>
+        <div class="q-fb"></div>
+      </div>
+ 
+      <div class="q-wrap" data-i="1">
+        <p>2. Który gruczoł pełni rolę „dyrektora" układu hormonalnego i kontroluje inne gruczoły?</p>
+        <div class="q-opts">
+          <button class="q-btn" onclick="ans(this,false)">Tarczyca</button>
+          <button class="q-btn" onclick="ans(this,false)">Nadnercza</button>
+          <button class="q-btn" onclick="ans(this,true)">Przysadka mózgowa</button>
+          <button class="q-btn" onclick="ans(this,false)">Trzustka</button>
+        </div>
+        <div class="q-fb"></div>
+      </div>
+ 
+      <div class="q-wrap" data-i="2">
+        <p>3. Co to jest ujemne sprzężenie zwrotne?</p>
+        <div class="q-opts">
+          <button class="q-btn" onclick="ans(this,false)">Mechanizm stale zwiększający poziom hormonów</button>
+          <button class="q-btn" onclick="ans(this,true)">Mechanizm ograniczający wydzielanie hormonu, gdy jego poziom jest zbyt wysoki</button>
+          <button class="q-btn" onclick="ans(this,false)">Reakcja organizmu na stres</button>
+          <button class="q-btn" onclick="ans(this,false)">Sposób wydzielania TSH przez tarczycę</button>
+        </div>
+        <div class="q-fb"></div>
+      </div>
+ 
+      <div class="q-wrap" data-i="3">
+        <p>4. Jakie są objawy <strong>nadczynności</strong> tarczycy?</p>
+        <div class="q-opts">
+          <button class="q-btn" onclick="ans(this,false)">Senność, przyrost masy ciała, uczucie zimna</button>
+          <button class="q-btn" onclick="ans(this,true)">Nerwowość, utrata masy ciała, przyspieszone bicie serca</button>
+          <button class="q-btn" onclick="ans(this,false)">Zmęczenie, spowolniony metabolizm, ospałość</button>
+          <button class="q-btn" onclick="ans(this,false)">Wysokie ciśnienie krwi i wysoki poziom glukozy</button>
+        </div>
+        <div class="q-fb"></div>
+      </div>
+ 
+      <div class="q-wrap" data-i="4">
+        <p>5. Który gruczoł wydziela adrenalinę w czasie stresu?</p>
+        <div class="q-opts">
+          <button class="q-btn" onclick="ans(this,false)">Tarczyca</button>
+          <button class="q-btn" onclick="ans(this,false)">Przysadka mózgowa</button>
+          <button class="q-btn" onclick="ans(this,false)">Trzustka</button>
+          <button class="q-btn" onclick="ans(this,true)">Nadnercza</button>
+        </div>
+        <div class="q-fb"></div>
+      </div>
+ 
+      <div class="q-wrap" data-i="5">
+        <p>6. Co NIE jest skutkiem działania adrenaliny?</p>
+        <div class="q-opts">
+          <button class="q-btn" onclick="ans(this,false)">Przyspieszenie pracy serca</button>
+          <button class="q-btn" onclick="ans(this,false)">Wzrost ciśnienia krwi</button>
+          <button class="q-btn" onclick="ans(this,true)">Spowolnienie przemiany materii</button>
+          <button class="q-btn" onclick="ans(this,false)">Wzrost poziomu glukozy we krwi</button>
+        </div>
+        <div class="q-fb"></div>
+      </div>
+ 
+      <div class="q-wrap" data-i="6">
+        <p>7. Gdy poziom hormonów tarczycy we krwi jest zbyt niski, przysadka wydziela…</p>
+        <div class="q-opts">
+          <button class="q-btn" onclick="ans(this,false)">Mniej TSH</button>
+          <button class="q-btn" onclick="ans(this,true)">Więcej TSH</button>
+          <button class="q-btn" onclick="ans(this,false)">Więcej adrenaliny</button>
+          <button class="q-btn" onclick="ans(this,false)">Więcej insuliny</button>
+        </div>
+        <div class="q-fb"></div>
+      </div>
+ 
+      <div class="q-wrap" data-i="7">
+        <p>8. Czym różni się działanie układu hormonalnego od nerwowego?</p>
+        <div class="q-opts">
+          <button class="q-btn" onclick="ans(this,false)">Hormonalny działa szybciej i krócej</button>
+          <button class="q-btn" onclick="ans(this,true)">Hormonalny działa wolniej, ale efekty utrzymują się dłużej</button>
+          <button class="q-btn" onclick="ans(this,false)">Oba działają tak samo szybko</button>
+          <button class="q-btn" onclick="ans(this,false)">Nerwowy reguluje tylko wzrost, hormonalny tylko emocje</button>
+        </div>
+        <div class="q-fb"></div>
+      </div>
+ 
+    </div>
+ 
+    <div class="quiz-score" id="qscore">
+      <div class="score-big" id="sbig">0/8</div>
+      <div class="score-msg" id="smsg"></div>
+      <button class="btn primary" onclick="restartQ()">Spróbuj jeszcze raz</button>
+    </div>
+ 
+    <div class="quiz-nav" id="qnav">
+      <button class="btn primary" id="nextBtn" onclick="nextQ()" disabled>Dalej →</button>
+      <span class="q-counter" id="qcnt">1 / 8</span>
+    </div>
+  </div>
+</div>
+ 
+</main>
+ 
+<footer style="text-align:center;padding:2rem;font-size:12px;color:var(--muted2);border-top:1px solid var(--border);">
+  🌿 Biologia · Rozdział 11 · Układ Hormonalny
+</footer>
+ 
 <script>
-function setupGemini(){
-  const current = localStorage.getItem('gemini_api_key') || '';
-  const key = prompt('Wklej Google Gemini API Key:', current);
-  if(key !== null){
-    localStorage.setItem('gemini_api_key', key.trim());
-    alert('Klucz Gemini zapisany.');
-  }
+const feedbacks=[
+  "Hormony są wydzielane bezpośrednio do krwi przez gruczoły dokrewne i nią transportowane do narządów docelowych.",
+  "Przysadka mózgowa (wraz z podwzgórzem) kontroluje pracę innych gruczołów — wydziela m.in. TSH, które pobudza tarczycę.",
+  "Ujemne sprzężenie zwrotne utrzymuje homeostazę: gdy poziom hormonu rośnie powyżej normy, uruchamia się hamowanie jego produkcji.",
+  "Nadczynność = za DUŻO hormonów → metabolizm przyspiesza → utrata masy ciała, nerwowość, tachykardia.",
+  "Adrenalina pochodzi z rdzenia nadnerczy — to hormon natychmiastowej mobilizacji w sytuacji stresu.",
+  "Adrenalina PRZYSPIESZA metabolizm. Spowolnienie to cecha niedoczynności tarczycy — nie adrenaliny.",
+  "Ujemne sprzężenie zwrotne: niedobór hormonów tarczycy → przysadka zwiększa wydzielanie TSH, żeby pobudzić tarczycę.",
+  "Układ nerwowy = milisekundy (impulsy). Układ hormonalny = minuty/godziny (hormony we krwi), ale trwa długo."
+];
+let cur=0,score=0,total=8;
+function ans(btn,ok){
+  const q=document.querySelector('.q-wrap.active');
+  q.querySelectorAll('.q-btn').forEach(b=>b.disabled=true);
+  const fb=q.querySelector('.q-fb');
+  if(ok){btn.classList.add('correct');score++;fb.className='q-fb ok';fb.innerHTML='<strong>✓ Dobrze!</strong> '+feedbacks[cur];}
+  else{btn.classList.add('wrong');q.querySelectorAll('.q-btn').forEach(b=>{if(b.onclick.toString().includes('true'))b.classList.add('correct');});fb.className='q-fb err';fb.innerHTML='<strong>✗ Niestety nie.</strong> '+feedbacks[cur];}
+  document.getElementById('nextBtn').disabled=false;
+  uprog();
 }
-
-async function aiSend() {
-  const input = document.getElementById('ai-input');
-  const q = input.value.trim();
-  if(!q) return;
-  input.value='';
-
-  const msgs = document.getElementById('ai-messages');
-
-  msgs.innerHTML += `
-    <div class="ai-msg">
-      <div class="ai-avatar user">Ty</div>
-      <div class="ai-bubble user">${q.replace(/</g,'&lt;')}</div>
-    </div>`;
-
-  try{
-    const key = localStorage.getItem('gemini_api_key');
-    if(!key) throw new Error('Najpierw dodaj Gemini API Key.');
-
-    const res = await fetch(
-      'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' + encodeURIComponent(key),
-      {
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({
-          contents:[{
-            parts:[{text:q}]
-          }]
-        })
-      }
-    );
-
-    const data = await res.json();
-
-    if(!res.ok){
-      throw new Error(data.error?.message || 'Błąd Gemini API');
-    }
-
-    let text =
-      data.candidates?.[0]?.content?.parts?.map(p => p.text || '').join('')
-      || 'Brak odpowiedzi';
-
-    text = text.replace(/</g,'&lt;').replace(/\n/g,'<br>');
-
-    msgs.innerHTML += `
-      <div class="ai-msg">
-        <div class="ai-avatar bot">AI</div>
-        <div class="ai-bubble">${text}</div>
-      </div>`;
-
-  }catch(e){
-    msgs.innerHTML += `
-      <div class="ai-msg">
-        <div class="ai-avatar bot">AI</div>
-        <div class="ai-bubble red">${e.message}</div>
-      </div>`;
-  }
-
-  msgs.scrollTop = msgs.scrollHeight;
+function nextQ(){
+  cur++;
+  if(cur>=total){showScore();return;}
+  document.querySelectorAll('.q-wrap').forEach(q=>q.classList.remove('active'));
+  document.querySelectorAll('.q-wrap')[cur].classList.add('active');
+  document.getElementById('nextBtn').disabled=true;
+  document.getElementById('qcnt').textContent=(cur+1)+' / '+total;
+  uprog();
+}
+function uprog(){document.getElementById('qprog').style.width=((cur/total)*100)+'%';}
+function showScore(){
+  document.getElementById('qqs').style.display='none';
+  document.getElementById('qnav').style.display='none';
+  const sc=document.getElementById('qscore');sc.style.display='flex';
+  document.getElementById('sbig').textContent=score+' / '+total;
+  const msgs=[[8,'🏆 Perfekcyjny wynik! Świetna robota!'],[6,'🎉 Bardzo dobrze — jesteś gotowy/a!'],[4,'👍 Nieźle, warto jeszcze powtórzyć słabsze punkty.'],[0,'📖 Wróć do materiału i spróbuj ponownie — dasz radę!']];
+  document.getElementById('smsg').textContent=msgs.find(m=>score>=m[0])[1];
+  document.getElementById('qprog').style.width='100%';
+}
+function restartQ(){
+  cur=0;score=0;
+  document.querySelectorAll('.q-wrap').forEach(q=>{q.classList.remove('active');q.querySelectorAll('.q-btn').forEach(b=>{b.classList.remove('correct','wrong');b.disabled=false;});q.querySelector('.q-fb').className='q-fb';});
+  document.querySelectorAll('.q-wrap')[0].classList.add('active');
+  document.getElementById('qqs').style.display='block';
+  document.getElementById('qnav').style.display='flex';
+  document.getElementById('qscore').style.display='none';
+  document.getElementById('nextBtn').disabled=true;
+  document.getElementById('qcnt').textContent='1 / '+total;
+  uprog();
 }
 </script>
-
 </body>
 </html>
